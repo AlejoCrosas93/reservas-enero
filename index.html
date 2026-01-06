@@ -48,12 +48,10 @@
   firebase.initializeApp(firebaseConfig);
   window.db = firebase.firestore();
 
-  console.log("🔥 Firebase inicializado y db disponible globalmente");
 </script>
 
 <script>
   async function cargar() {
-    console.log("👉 cargar() ejecutada");
 
     const nombre = document.getElementById("nombre").value;
     const email = document.getElementById("email").value;
@@ -64,8 +62,7 @@
     cont.innerHTML = "";
 
     const snap = await db.collection("salidas").get();
-    console.log("📦 documentos encontrados:", snap.size);
-
+ 
     snap.forEach(doc => {
       const d = doc.data();
       if (d.ocupada === true) return;
