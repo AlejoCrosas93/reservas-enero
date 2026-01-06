@@ -136,97 +136,18 @@ function renderizar(snap, email, nombre) {
   });
 }
   
-</script>
-
 <script>
-  async function cargar() {
-
+  function cargar() {
     const nombre = document.getElementById("nombre").value;
     const email = document.getElementById("email").value;
 
-    if (!nombre || !email) return alert("Completa nombre y email");
+    if (!nombre || !email) {
+      alert("Ingresa nombre y email");
+      return;
+    }
 
-    const cont = document.getElementById("lista");
-    cont.innerHTML = "";
-
-    const snap = await db.collection("salidas").get();
- 
-const salidas = [];
-
-snap.forEach(doc => {
- salidas.forEach(d => {
-  const esMia = d.email === email && d.ocupada === true;
-  if (d.ocupada === true && d.email !== email) return;
-
-  const div = document.createElement("div");
-  div.className = "slot";
-
-  div.innerHTML = `
-    <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-    🕘 ${d.hora}<br>
-    📍 <b>${d.lugar}</b><br>
-    <small>${d.direccion}</small><br><br>
-    ${esMia
-      ? '<button class="cancelar">Cancelar</button>'
-      : '<button class="reservar">Reservar</button>'}
-  `;
-
-  /* botones igual que antes */
-
-  cont.appendChild(div);
-});
-
-  if (esMia) {
-    div.querySelector(".cancelar").onclick = async () => {
-      const ahora = new Date();
-      const fechaSalida = new Date(d.fecha + "T00:00:00");
-      const diffHoras = (fechaSalida - ahora) / (1000 * 60 * 60);
-
-      if (diffHoras < 48) {
-        alert("No puedes cancelar con menos de 48 horas de anticipación.");
-        return;
-      }
-
-      await db.collection("salidas").doc(doc.id).update({
-        ocupada: false,
-        reservadoPor: "",
-        email: ""
-      });
-
-      alert("Salida cancelada");
-      cargar();
-    };
+    escucharSalidas(email, nombre);
   }
-
-  if (!esMia) {
-    div.querySelector(".reservar").onclick = async () => {
-
-      const reservasSnap = await db
-        .collection("salidas")
-        .where("email", "==", email)
-        .where("ocupada", "==", true)
-        .get();
-
-      if (reservasSnap.size >= 4) {
-        alert("Ya tienes el máximo de 4 salidas permitidas en el mes.");
-        return;
-      }
-
-      await db.collection("salidas").doc(doc.id).update({
-        ocupada: true,
-        reservadoPor: nombre,
-        email: email
-      });
-
-      alert("Reservado");
-      cargar();
-    };
-  }
-
-  cont.appendChild(div);
-});
-}
 </script>
-
 </body>
 </html>
