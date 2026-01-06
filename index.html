@@ -79,6 +79,16 @@
       `;
 
       div.querySelector("button").onclick = async () => {
+      const reservasSnap = await db
+  .collection("salidas")
+  .where("email", "==", email)
+  .where("ocupada", "==", true)
+  .get();
+
+if (reservasSnap.size >= 4) {
+  alert("Ya tienes el máximo de 4 salidas permitidas en el mes.");
+  return;
+}
         await db.collection("salidas").doc(doc.id).update({
           ocupada: true,
           reservadoPor: nombre,
