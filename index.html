@@ -76,7 +76,7 @@ function renderizar(snap, email, nombre) {
 
   salidas.forEach(d => {
     const esMia = d.email === email && d.ocupada === true;
-    if (d.ocupada === true && d.email !== email) return;
+   // if (d.ocupada === true && d.email !== email) return;
 
     const div = document.createElement("div");
     div.className = "slot";
