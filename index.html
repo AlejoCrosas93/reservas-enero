@@ -47,7 +47,7 @@
 
     snap.forEach(doc => {
       const d = doc.data();
-      if (!d.disponible) return;
+      if (d.ocupada) return;
 
       const div = document.createElement("div");
       div.className = "slot";
@@ -57,10 +57,10 @@
       `;
 
       div.querySelector("button").onclick = async () => {
-        await db.collection("salidas").doc(doc.id).update({
-          disponible: false,
-          reservadoPor: email
-        });
+      await db.collection("salidas").doc(doc.id).update({
+  ocupada: true,
+  email: email
+});
         alert("Reservado");
         cargar();
       };
