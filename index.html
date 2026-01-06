@@ -28,72 +28,49 @@
 <div id="lista"></div>
  
 <script>
-  function diaSemana(fechaISO) {
-  const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-  const fecha = new Date(fechaISO + "T00:00:00");
-  return dias[fecha.getDay()];
-}
-  
-  const firebaseConfig = {
-    apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
-    authDomain: "reservas-enero.firebaseapp.com",
-    projectId: "reservas-enero",
-    storageBucket: "reservas-enero.firebasestorage.app",
-    messagingSenderId: "109682365508",
-    appId: "1:109682365508:web:716eee5b1538d2f769d811"
-  };
+async function cargar() {
+  const nombre = document.getElementById("nombre").value;
+  const email = document.getElementById("email").value;
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  if (!nombre) return alert("Ingresa tu nombre");
+  if (!email) return alert("Ingresa tu email");
 
-  async function cargar() {
-    const nombre = document.getElementById("nombre").value;
-const email = document.getElementById("email").value;
+  const cont = document.getElementById("lista");
+  cont.innerHTML = "";
 
-if (!nombre) return alert("Ingresa tu nombre");
-if (!email) return alert("Ingresa tu email");
+  const snap = await db.collection("salidas").get();
 
-    const cont = document.getElementById("lista");
-    cont.innerHTML = "";
+  snap.forEach(doc => {
+    const d = doc.data();
 
-    const snap = await db.collection("salidas").get();
+    // ❌ No mostrar ocupadas
+    if (d.ocupada === true) return;
 
-    snap.forEach(doc => {
-      const d = doc.data();
-if (d.ocupada === true) return;
-  const div = document.createElement("div");
-  div.className = "slot";
-  div.innerHTML = `
-    <b>${d.fecha}</b> - ${d.hora}<br>
-    Reservado por: <i>${d.reservadoPor}</i>
-  `;
-  cont.appendChild(div);
-  return;
-}
+    const div = document.createElement("div");
+    div.className = "slot";
 
-      const div = document.createElement("div");
-      div.className = "slot";
-div.innerHTML = `
-  <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-  🕘 ${d.hora}<br>
-  📍 <b>${d.lugar}</b><br>
-  <small>${d.direccion}</small><br>
-  Reservado por: <i>${d.reservadoPor}</i>
-`;
+    div.innerHTML = `
+      <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+      🕘 ${d.hora}<br>
+      📍 <b>${d.lugar}</b><br>
+      <small>${d.direccion}</small><br><br>
+      <button>Reservar</button>
+    `;
 
-      div.querySelector("button").onclick = async () => {
+    div.querySelector("button").onclick = async () => {
       await db.collection("salidas").doc(doc.id).update({
-  ocupada: true,
-  email: email,
-  reservadoPor: nombre
-});
-        alert("Reservado");
-        cargar();
-      };
+        ocupada: true,
+        email: email,
+        reservadoPor: nombre
+      });
 
-      cont.appendChild(div);
-    });
-  }
+      alert("Reservado");
+      cargar();
+    };
+
+    cont.appendChild(div);
+  });
+}
 </script>
 
 </body>
