@@ -37,8 +37,6 @@
 <div id="lista"></div>
  
 <script>
-  document.getElementById("nombre").disabled = true;
-document.getElementById("email").disabled = true;
 
   function diaSemana(fechaISO) {
     const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
@@ -167,6 +165,9 @@ ${d.lugar === "Zoom"
       alert("Ingresa nombre y email");
       return;
     }
+    
+document.getElementById("nombre").disabled = true;
+document.getElementById("email").disabled = true;
 
     escucharSalidas(email, nombre);
   }
