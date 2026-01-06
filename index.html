@@ -63,46 +63,53 @@
 
     const snap = await db.collection("salidas").get();
  
-    snap.forEach(doc => {
-      const d = doc.data();
-      const esMia = d.email === email && d.ocupada === true;
-      if (d.ocupada === true && d.email !== email) return;
+   snap.forEach(doc => {
+  const d = doc.data();
 
-      const div = document.createElement("div");
-      div.className = "slot";
+  // PASO 2.2 → identificar si esta salida es del usuario
+  const esMia = d.email === email && d.ocupada === true;
 
-     div.innerHTML = `
-  <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-  🕘 ${d.hora}<br>
-  📍 <b>${d.lugar}</b><br>
-  <small>${d.direccion}</small><br><br>
-  ${esMia ? '<button class="cancelar">Cancelar</button>' : '<button class="reservar">Reservar</button>'}
-`;
+  // Ocultar salidas ocupadas por otros
+  if (d.ocupada === true && d.email !== email) return;
 
-      if (esMia) {
-  div.querySelector(".cancelar").onclick = async () => {
+  const div = document.createElement("div");
+  div.className = "slot";
 
-    const ahora = new Date();
-    const fechaSalida = new Date(d.fecha + "T00:00:00");
-    const diffHoras = (fechaSalida - ahora) / (1000 * 60 * 60);
+  div.innerHTML = `
+    <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+    🕘 ${d.hora}<br>
+    📍 <b>${d.lugar}</b><br>
+    <small>${d.direccion}</small><br><br>
+    ${esMia
+      ? '<button class="cancelar">Cancelar</button>'
+      : '<button class="reservar">Reservar</button>'}
+  `;
 
-    if (diffHoras < 48) {
-      alert("No puedes cancelar con menos de 48 horas de anticipación.");
-      return;
-    }
+  // BOTÓN CANCELAR
+  if (esMia) {
+    div.querySelector(".cancelar").onclick = async () => {
+      const ahora = new Date();
+      const fechaSalida = new Date(d.fecha + "T00:00:00");
+      const diffHoras = (fechaSalida - ahora) / (1000 * 60 * 60);
 
-    await db.collection("salidas").doc(doc.id).update({
-      ocupada: false,
-      reservadoPor: "",
-      email: ""
-    });
+      if (diffHoras < 48) {
+        alert("No puedes cancelar con menos de 48 horas de anticipación.");
+        return;
+      }
 
-    alert("Salida cancelada");
-    cargar();
-  };
-}
+      await db.collection("salidas").doc(doc.id).update({
+        ocupada: false,
+        reservadoPor: "",
+        email: ""
+      });
 
-if (!esMia) {
+      alert("Salida cancelada");
+      cargar();
+    };
+  }
+
+  // BOTÓN RESERVAR
+  if (!esMia) {
     div.querySelector(".reservar").onclick = async () => {
 
       const reservasSnap = await db
@@ -129,31 +136,7 @@ if (!esMia) {
 
   cont.appendChild(div);
 });
-      
-      div.querySelector("button").onclick = async () => {
-      const reservasSnap = await db
-  .collection("salidas")
-  .where("email", "==", email)
-  .where("ocupada", "==", true)
-  .get();
-
-if (reservasSnap.size >= 4) {
-  alert("Ya tienes el máximo de 4 salidas permitidas en el mes.");
-  return;
 }
-        await db.collection("salidas").doc(doc.id).update({
-          ocupada: true,
-          reservadoPor: nombre,
-          email: email
-        });
-
-        alert("Reservado");
-        cargar();
-      };
-
-      cont.appendChild(div);
-    });
-  }
 </script>
 
 </body>
