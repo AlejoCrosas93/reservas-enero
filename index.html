@@ -60,7 +60,7 @@ if (!email) return alert("Ingresa tu email");
 
     snap.forEach(doc => {
       const d = doc.data();
-     if (d.ocupada) {
+   if (d.ocupada) return;
   const div = document.createElement("div");
   div.className = "slot";
   div.innerHTML = `
