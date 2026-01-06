@@ -26,14 +26,14 @@
 <button onclick="cargar()">Cargar salidas</button>
 
 <div id="lista"></div>
-
-function diaSemana(fechaISO) {
+ 
+<script>
+  function diaSemana(fechaISO) {
   const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
   const fecha = new Date(fechaISO + "T00:00:00");
   return dias[fecha.getDay()];
 }
   
-<script>
   const firebaseConfig = {
     apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
     authDomain: "reservas-enero.firebaseapp.com",
