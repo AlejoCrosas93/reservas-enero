@@ -55,6 +55,9 @@
     "alegabo.98@gmail.com"
   ];
 
+  const ADMIN_PASSWORD = "1420";
+</script>
+
   function esAdmin(email) {
     return ADMINS.includes(email);
   }
@@ -200,20 +203,34 @@
   }
 
   /* ================= CARGAR ================= */
-  function cargar() {
-    const nombre = document.getElementById("nombre").value;
-    const email = document.getElementById("email").value;
+function cargar() {
+  const nombre = document.getElementById("nombre").value;
+  const email = document.getElementById("email").value;
 
-    if (!nombre || !email) {
-      alert("Ingresa nombre y email");
-      return;
-    }
-
-    document.getElementById("nombre").disabled = true;
-    document.getElementById("email").disabled = true;
-
-    escucharSalidas(email, nombre, esAdmin(email));
+  if (!nombre || !email) {
+    alert("Ingresa nombre y email");
+    return;
   }
+
+  let admin = false;
+
+  if (ADMINS.includes(email)) {
+    const clave = prompt("Ingresa la clave de administrador:");
+
+    if (clave === ADMIN_PASSWORD) {
+      admin = true;
+      alert("Modo administrador activado");
+    } else {
+      alert("Clave incorrecta. Entraste como usuario normal.");
+    }
+  }
+
+  document.getElementById("nombre").disabled = true;
+  document.getElementById("email").disabled = true;
+
+  escucharSalidas(email, nombre, admin);
+}
+
 </script>
 
 </body>
