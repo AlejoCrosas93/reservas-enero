@@ -103,14 +103,19 @@ else div.className = "slot no-disponible";
       <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
       🕘 ${d.hora}<br>
       📍 <b>${d.lugar}</b><br>
-      <small>
-  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
-    ${d.direccion}
-  </a>
-</small><br><br>
-${d.lugar === "Zoom"
-  ? '<a href="https://zoom.us" target="_blank">💻 Entrar a Zoom</a><br><br>'
-  : ''}
+      ${d.lugar === "Zoom"
+  ? `
+    <a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>
+  `
+  : `
+    <small>
+      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
+        ${d.direccion}
+      </a>
+    </small><br><br>
+  `
+}
+
       ${esMia
   ? '<button class="cancelar">Cancelar</button>'
   : estaLibre
