@@ -17,8 +17,12 @@
 
 <h2>Reservas Enero</h2>
 
-<label>Email:</label>
-<input type="email" id="email" />
+<label>Nombre:</label><br>
+<input type="text" id="nombre" placeholder="Tu nombre completo" /><br><br>
+
+<label>Email:</label><br>
+<input type="email" id="email" placeholder="tu@email.com" /><br><br>
+
 <button onclick="cargar()">Cargar salidas</button>
 
 <div id="lista"></div>
@@ -37,8 +41,11 @@
   const db = firebase.firestore();
 
   async function cargar() {
-    const email = document.getElementById("email").value;
-    if (!email) return alert("Ingresa tu email");
+    const nombre = document.getElementById("nombre").value;
+const email = document.getElementById("email").value;
+
+if (!nombre) return alert("Ingresa tu nombre");
+if (!email) return alert("Ingresa tu email");
 
     const cont = document.getElementById("lista");
     cont.innerHTML = "";
@@ -47,7 +54,16 @@
 
     snap.forEach(doc => {
       const d = doc.data();
-      if (d.ocupada) return;
+     if (d.ocupada) {
+  const div = document.createElement("div");
+  div.className = "slot";
+  div.innerHTML = `
+    <b>${d.fecha}</b> - ${d.hora}<br>
+    Reservado por: <i>${d.reservadoPor}</i>
+  `;
+  cont.appendChild(div);
+  return;
+}
 
       const div = document.createElement("div");
       div.className = "slot";
@@ -59,7 +75,8 @@
       div.querySelector("button").onclick = async () => {
       await db.collection("salidas").doc(doc.id).update({
   ocupada: true,
-  email: email
+  email: email,
+  reservadoPor: nombre
 });
         alert("Reservado");
         cargar();
