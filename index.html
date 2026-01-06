@@ -27,6 +27,12 @@
 
 <div id="lista"></div>
 
+function diaSemana(fechaISO) {
+  const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const fecha = new Date(fechaISO + "T00:00:00");
+  return dias[fecha.getDay()];
+}
+  
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
@@ -67,10 +73,13 @@ if (!email) return alert("Ingresa tu email");
 
       const div = document.createElement("div");
       div.className = "slot";
-      div.innerHTML = `
-        <b>${d.fecha}</b> - ${d.hora}<br>
-        <button>Reservar</button>
-      `;
+div.innerHTML = `
+  <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+  🕘 ${d.hora}<br>
+  📍 <b>${d.lugar}</b><br>
+  <small>${d.direccion}</small><br>
+  Reservado por: <i>${d.reservadoPor}</i>
+`;
 
       div.querySelector("button").onclick = async () => {
       await db.collection("salidas").doc(doc.id).update({
