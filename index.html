@@ -8,22 +8,30 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
-    .slot.mia {
-  background: #e6f7ff;
-  border-color: #1890ff;
-}
-
-.slot.libre {
-  background: #f6ffed;
-  border-color: #52c41a;
-}
-    .slot.no-disponible {
-  background: #f0f0f0;
-  border-color: #999;
-  color: #777;
-}
     body { font-family: Arial, sans-serif; padding: 20px; }
-    .slot { border: 1px solid #ccc; padding: 10px; margin: 6px 0; }
+
+    .slot {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 6px 0;
+    }
+
+    .slot.mia {
+      background: #e6f7ff;
+      border-color: #1890ff;
+    }
+
+    .slot.libre {
+      background: #f6ffed;
+      border-color: #52c41a;
+    }
+
+    .slot.no-disponible {
+      background: #f0f0f0;
+      border-color: #999;
+      color: #777;
+    }
+
     button { margin-top: 5px; }
   </style>
 </head>
@@ -32,25 +40,32 @@
 <h2>Reservas Enero</h2>
 
 <label>Nombre:</label><br>
-<input type="text" id="nombre" placeholder="Tu nombre completo" /><br><br>
+<input type="text" id="nombre" /><br><br>
 
 <label>Email:</label><br>
-<input type="email" id="email" placeholder="tu@email.com" /><br><br>
+<input type="email" id="email" /><br><br>
 
 <button onclick="cargar()">Cargar salidas</button>
 
 <div id="lista"></div>
- 
-<script>
 
+<script>
+  /* ================= ADMINISTRADORES ================= */
+  const ADMINS = [
+    "alegabo.98@gmail.com"
+  ];
+
+  function esAdmin(email) {
+    return ADMINS.includes(email);
+  }
+
+  /* ================= FECHA ================= */
   function diaSemana(fechaISO) {
     const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-    const fecha = new Date(fechaISO + "T00:00:00");
-    return dias[fecha.getDay()];
+    return dias[new Date(fechaISO + "T00:00:00").getDay()];
   }
-</script>
 
-<script>
+  /* ================= FIREBASE ================= */
   const firebaseConfig = {
     apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
     authDomain: "reservas-enero.firebaseapp.com",
@@ -61,116 +76,130 @@
   };
 
   firebase.initializeApp(firebaseConfig);
-  window.db = firebase.firestore();
+  const db = firebase.firestore();
 
   let unsubscribe = null;
 
-function escucharSalidas(email, nombre) {
-  if (unsubscribe) unsubscribe();
+  /* ================= ESCUCHAR SALIDAS ================= */
+  function escucharSalidas(email, nombre, admin) {
+    if (unsubscribe) unsubscribe();
 
-  unsubscribe = db.collection("salidas").onSnapshot(snapshot => {
-    renderizar(snapshot, email, nombre);
-  });
-}
+    unsubscribe = db.collection("salidas").onSnapshot(snapshot => {
+      renderizar(snapshot, email, nombre, admin);
+    });
+  }
 
-function renderizar(snap, email, nombre) {
-  const cont = document.getElementById("lista");
-  cont.innerHTML = "";
+  /* ================= RENDER ================= */
+  function renderizar(snapshot, email, nombre, admin) {
+    const cont = document.getElementById("lista");
+    cont.innerHTML = "";
 
-  const salidas = [];
+    const salidas = [];
+    snapshot.forEach(doc => salidas.push({ id: doc.id, ...doc.data() }));
 
-  snap.forEach(doc => {
-    salidas.push({ id: doc.id, ...doc.data() });
-  });
+    salidas.sort((a, b) =>
+      new Date(a.fecha + "T" + a.hora) - new Date(b.fecha + "T" + b.hora)
+    );
 
-  salidas.sort((a, b) => {
-    const fechaA = new Date(a.fecha + "T" + a.hora);
-    const fechaB = new Date(b.fecha + "T" + b.hora);
-    return fechaA - fechaB;
-  });
+    salidas.forEach(d => {
+      const esMia = d.ocupada && d.email === email;
+      const estaLibre = !d.ocupada;
+      const ocupadaPorOtro = d.ocupada && d.email !== email;
 
-  salidas.forEach(d => {
-    const esMia = d.email === email && d.ocupada === true;
-const estaLibre = d.ocupada === false;
-const ocupadaPorOtro = d.ocupada === true && d.email !== email;
+      if (!admin && ocupadaPorOtro) return;
 
-    const div = document.createElement("div");
-    if (esMia) div.className = "slot mia";
-else if (estaLibre) div.className = "slot libre";
-else div.className = "slot no-disponible";
+      const div = document.createElement("div");
 
-    div.innerHTML = `
-      <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-      🕘 ${d.hora}<br>
-      📍 <b>${d.lugar}</b><br>
-      ${d.lugar === "Zoom"
-  ? `
-    <a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>
-  `
-  : `
-    <small>
-      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
-        ${d.direccion}
-      </a>
-    </small><br><br>
-  `
-}
+      if (d.bloqueada) div.className = "slot no-disponible";
+      else if (esMia) div.className = "slot mia";
+      else if (estaLibre) div.className = "slot libre";
+      else div.className = "slot no-disponible";
 
-      ${esMia
-  ? '<button class="cancelar">Cancelar</button>'
-  : estaLibre
-    ? '<button class="reservar">Reservar</button>'
-    : '<span><b>No disponible</b></span>'}
+      div.innerHTML = `
+        ${admin ? `
+          <button class="${d.bloqueada ? "desbloquear" : "bloquear"}">
+            ${d.bloqueada ? "Desbloquear" : "Bloquear"}
+          </button><br><br>
+        ` : ""}
 
-    `;
+        <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+        🕘 ${d.hora}<br>
+        📍 <b>${d.lugar}</b><br>
 
-    if (esMia) {
-      div.querySelector(".cancelar").onclick = async () => {
-        const ahora = new Date();
-        const fechaSalida = new Date(d.fecha + "T00:00:00");
-        const diffHoras = (fechaSalida - ahora) / (1000 * 60 * 60);
+        ${d.lugar === "Zoom"
+          ? `<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
+          : `<small>
+               <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
+                 ${d.direccion}
+               </a>
+             </small><br><br>`}
 
-        if (diffHoras < 48) {
-          alert("No puedes cancelar con menos de 48 horas de anticipación.");
-          return;
+        ${esMia
+          ? `<button class="cancelar">Cancelar</button>`
+          : estaLibre && !d.bloqueada
+            ? `<button class="reservar">Reservar</button>`
+            : `<b>No disponible</b>`
         }
+      `;
 
-        await db.collection("salidas").doc(d.id).update({
-          ocupada: false,
-          reservadoPor: "",
-          email: ""
-        });
-      };
-    }
-
-    if (!esMia) {
-      div.querySelector(".reservar").onclick = async () => {
-
-        const reservasSnap = await db
-          .collection("salidas")
-          .where("email", "==", email)
-          .where("ocupada", "==", true)
-          .get();
-
-        if (reservasSnap.size >= 4) {
-          alert("Ya tienes el máximo de 4 salidas permitidas en el mes.");
-          return;
+      /* ===== ADMIN BLOQUEAR ===== */
+      if (admin) {
+        const btnBloq = div.querySelector(".bloquear, .desbloquear");
+        if (btnBloq) {
+          btnBloq.onclick = async () => {
+            await db.collection("salidas").doc(d.id).update({
+              bloqueada: !d.bloqueada
+            });
+          };
         }
+      }
 
-        await db.collection("salidas").doc(d.id).update({
-          ocupada: true,
-          reservadoPor: nombre,
-          email: email
-        });
-      };
-    }
+      /* ===== CANCELAR ===== */
+      if (esMia) {
+        div.querySelector(".cancelar").onclick = async () => {
+          const diff = (new Date(d.fecha) - new Date()) / 36e5;
+          if (diff < 48) {
+            alert("No puedes cancelar con menos de 48 horas");
+            return;
+          }
 
-    cont.appendChild(div);
-  });
-}
-</script>
-  
-<script>
+          await db.collection("salidas").doc(d.id).update({
+            ocupada: false,
+            email: "",
+            reservadoPor: ""
+          });
+        };
+      }
+
+      /* ===== RESERVAR ===== */
+      if (estaLibre && !d.bloqueada) {
+        const btn = div.querySelector(".reservar");
+        if (btn) {
+          btn.onclick = async () => {
+            const snap = await db.collection("salidas")
+              .where("email", "==", email)
+              .where("ocupada", "==", true)
+              .get();
+
+            if (snap.size >= 4) {
+              alert("Máximo 4 reservas permitidas");
+              return;
+            }
+
+            await db.collection("salidas").doc(d.id).update({
+              ocupada: true,
+              email,
+              reservadoPor: nombre
+            });
+          };
+        }
+      }
+
+      cont.appendChild(div);
+    });
+  }
+
+  /* ================= CARGAR ================= */
   function cargar() {
     const nombre = document.getElementById("nombre").value;
     const email = document.getElementById("email").value;
@@ -179,13 +208,13 @@ else div.className = "slot no-disponible";
       alert("Ingresa nombre y email");
       return;
     }
-    
-document.getElementById("nombre").disabled = true;
-document.getElementById("email").disabled = true;
 
-    escucharSalidas(email, nombre);
+    document.getElementById("nombre").disabled = true;
+    document.getElementById("email").disabled = true;
+
+    escucharSalidas(email, nombre, esAdmin(email));
   }
 </script>
-  
+
 </body>
 </html>
