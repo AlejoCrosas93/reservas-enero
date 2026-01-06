@@ -17,6 +17,11 @@
   background: #f6ffed;
   border-color: #52c41a;
 }
+    .slot.no-disponible {
+  background: #f0f0f0;
+  border-color: #999;
+  color: #777;
+}
     body { font-family: Arial, sans-serif; padding: 20px; }
     .slot { border: 1px solid #ccc; padding: 10px; margin: 6px 0; }
     button { margin-top: 5px; }
@@ -87,11 +92,12 @@ function renderizar(snap, email, nombre) {
   salidas.forEach(d => {
     const esMia = d.email === email && d.ocupada === true;
 const estaLibre = d.ocupada === false;
-
-if (!estaLibre && !esMia) return;
+const ocupadaPorOtro = d.ocupada === true && d.email !== email;
 
     const div = document.createElement("div");
-    div.className = "slot " + (esMia ? "mia" : "libre");
+    if (esMia) div.className = "slot mia";
+else if (estaLibre) div.className = "slot libre";
+else div.className = "slot no-disponible";
 
     div.innerHTML = `
       <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
@@ -106,8 +112,11 @@ ${d.lugar === "Zoom"
   ? '<a href="https://zoom.us" target="_blank">💻 Entrar a Zoom</a><br><br>'
   : ''}
       ${esMia
-        ? '<button class="cancelar">Cancelar</button>'
-        : '<button class="reservar">Reservar</button>'}
+  ? '<button class="cancelar">Cancelar</button>'
+  : estaLibre
+    ? '<button class="reservar">Reservar</button>'
+    : '<span><b>No disponible</b></span>'}
+
     `;
 
     if (esMia) {
