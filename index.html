@@ -142,16 +142,18 @@
       `;
 
       /* ===== ADMIN BLOQUEAR ===== */
-      if (admin) {
-        const btnBloq = div.querySelector(".bloquear, .desbloquear");
-        if (btnBloq) {
-          btnBloq.onclick = async () => {
-            await db.collection("salidas").doc(d.id).update({
-              bloqueada: !d.bloqueada
-            });
-          };
-        }
-      }
+      /* ===== ADMIN BLOQUEAR ===== */
+if (admin) {
+  const btnBloq = div.querySelector(".bloquear, .desbloquear");
+
+  if (btnBloq) {
+    btnBloq.onclick = async () => {
+      await db.collection("salidas").doc(d.id).update({
+        bloqueada: d.bloqueada ? false : true
+      });
+    };
+  }
+}
 
       /* ===== CANCELAR ===== */
       if (esMia) {
