@@ -28,50 +28,73 @@
 <div id="lista"></div>
  
 <script>
-async function cargar() {
-  console.log("👉 cargar() ejecutada");
-  const nombre = document.getElementById("nombre").value;
-  const email = document.getElementById("email").value;
+  function diaSemana(fechaISO) {
+    const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+    const fecha = new Date(fechaISO + "T00:00:00");
+    return dias[fecha.getDay()];
+  }
+</script>
 
-  if (!nombre) return alert("Ingresa tu nombre");
-  if (!email) return alert("Ingresa tu email");
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
+    authDomain: "reservas-enero.firebaseapp.com",
+    projectId: "reservas-enero",
+    storageBucket: "reservas-enero.firebasestorage.app",
+    messagingSenderId: "109682365508",
+    appId: "1:109682365508:web:716eee5b1538d2f769d811"
+  };
 
-  const cont = document.getElementById("lista");
-  cont.innerHTML = "";
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  const snap = await db.collection("salidas").get();
+  console.log("🔥 Firebase inicializado correctamente");
+</script>
 
-  snap.forEach(doc => {
-    const d = doc.data();
+<script>
+  async function cargar() {
+    console.log("👉 cargar() ejecutada");
 
-    // ❌ No mostrar ocupadas
-    if (d.ocupada === true) return;
+    const nombre = document.getElementById("nombre").value;
+    const email = document.getElementById("email").value;
 
-    const div = document.createElement("div");
-    div.className = "slot";
+    if (!nombre || !email) return alert("Completa nombre y email");
 
-    div.innerHTML = `
-      <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-      🕘 ${d.hora}<br>
-      📍 <b>${d.lugar}</b><br>
-      <small>${d.direccion}</small><br><br>
-      <button>Reservar</button>
-    `;
+    const cont = document.getElementById("lista");
+    cont.innerHTML = "";
 
-    div.querySelector("button").onclick = async () => {
-      await db.collection("salidas").doc(doc.id).update({
-        ocupada: true,
-        email: email,
-        reservadoPor: nombre
-      });
+    const snap = await db.collection("salidas").get();
+    console.log("📦 documentos encontrados:", snap.size);
 
-      alert("Reservado");
-      cargar();
-    };
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (d.ocupada === true) return;
 
-    cont.appendChild(div);
-  });
-}
+      const div = document.createElement("div");
+      div.className = "slot";
+
+      div.innerHTML = `
+        <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+        🕘 ${d.hora}<br>
+        📍 <b>${d.lugar}</b><br>
+        <small>${d.direccion}</small><br><br>
+        <button>Reservar</button>
+      `;
+
+      div.querySelector("button").onclick = async () => {
+        await db.collection("salidas").doc(doc.id).update({
+          ocupada: true,
+          reservadoPor: nombre,
+          email: email
+        });
+
+        alert("Reservado");
+        cargar();
+      };
+
+      cont.appendChild(div);
+    });
+  }
 </script>
 
 </body>
