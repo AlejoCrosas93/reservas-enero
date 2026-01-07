@@ -142,6 +142,14 @@ const db=firebase.firestore();
 const auth = firebase.auth();
 auth.onAuthStateChanged(user => {
   console.log("AUTH USER:", user);
+
+  if (user && ADMINS.includes(user.email)) {
+    ES_ADMIN = true;
+
+    // 🔁 volver a renderizar como admin
+    if (unsub) unsub();
+    escuchar(email.value, nombre.value);
+  }
 });
 
 function loginAdminSilencioso(email) {
