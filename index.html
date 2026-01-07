@@ -4,31 +4,118 @@
   <meta charset="UTF-8" />
   <title>Reservas salidas al servicio</title>
 
+  <!-- Fuente Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      padding: 20px;
+      background: #fafafa;
+    }
 
     #titulo {
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
+      font-weight: 600;
+      color: #2f6fb2;
     }
 
     #subtitulo {
       text-align: center;
-      font-weight: normal;
+      font-weight: 400;
       color: #555;
       margin-top: 0;
       margin-bottom: 25px;
     }
 
-    .slot { border: 1px solid #ccc; padding: 10px; margin: 6px 0; }
-    .slot.mia { background: #e6f7ff; border-color: #1890ff; }
-    .slot.libre { background: #f6ffed; border-color: #52c41a; }
-    .slot.no-disponible { background: #f0f0f0; border-color: #999; color: #777; }
+    label {
+      font-weight: 500;
+    }
 
-    button { margin-top: 5px; }
+    input {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 260px;
+      max-width: 100%;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    button {
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
+      cursor: pointer;
+      background: #2f6fb2;
+      color: white;
+      font-size: 0.9em;
+      font-family: 'Poppins', sans-serif;
+      transition: opacity 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .cancelar {
+      background: #c0392b;
+    }
+
+    .toggle {
+      background: #777;
+    }
+
+    .slot {
+      border-radius: 12px;
+      padding: 14px;
+      margin: 10px 0;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      border: 1px solid #ccc;
+    }
+
+    .slot:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .slot.mia {
+      background: #e6f2ff;
+      border-color: #2f6fb2;
+    }
+
+    .slot.libre {
+      background: #eef9f1;
+      border-color: #4caf50;
+    }
+
+    .slot.no-disponible {
+      background: #f7f5f2;
+      border-color: #ccc;
+      color: #777;
+    }
+
+    .slot b {
+      font-weight: 600;
+    }
+
+    .slot small {
+      color: #666;
+    }
+
+    a {
+      color: #2f6fb2;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -59,11 +146,7 @@ function diaSemana(fechaISO) {
 
 /* ================= SUBTÍTULO AUTOMÁTICO ================= */
 (function () {
-  const meses = [
-    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-  ];
-
+  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   const fecha = new Date();
   document.getElementById("subtitulo").textContent =
     `${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
@@ -82,7 +165,6 @@ let unsubscribe = null;
 /* ================= ESCUCHAR ================= */
 function escucharSalidas(email, nombre, admin) {
   if (unsubscribe) unsubscribe();
-
   unsubscribe = db.collection("salidas").onSnapshot(snap => {
     renderizar(snap, email, nombre, admin);
   });
@@ -96,90 +178,32 @@ function renderizar(snapshot, email, nombre, admin) {
   const salidas = [];
   snapshot.forEach(doc => salidas.push({ id: doc.id, ...doc.data() }));
 
-  salidas.sort((a,b) =>
-    new Date(a.fecha+"T"+a.hora) - new Date(b.fecha+"T"+b.hora)
-  );
+  salidas.sort((a,b) => new Date(a.fecha+"T"+a.hora) - new Date(b.fecha+"T"+b.hora));
 
   salidas.forEach(d => {
     const esMia = d.ocupada && d.email === email;
     const estaLibre = !d.ocupada;
-
     if (!admin && d.ocupada && !esMia) return;
 
     const div = document.createElement("div");
-
-    div.className = d.bloqueada
-      ? "slot no-disponible"
-      : esMia
-        ? "slot mia"
-        : estaLibre
-          ? "slot libre"
-          : "slot no-disponible";
+    div.className = d.bloqueada ? "slot no-disponible" : esMia ? "slot mia" : estaLibre ? "slot libre" : "slot no-disponible";
 
     div.innerHTML = `
       ${admin ? `<button class="toggle">${d.bloqueada ? "Desbloquear" : "Bloquear"}</button><br><br>` : ""}
-
       <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
       🕘 ${d.hora}<br>
       📍 <b>${d.lugar}</b><br>
-
-      ${
-        d.lugar === "Zoom"
-          ? `<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
-          : `<small>
-               <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
-                 ${d.direccion}
-               </a>
-             </small><br><br>`
-      }
-
-      ${
-        esMia
-          ? `<button class="cancelar">Cancelar</button>`
-          : estaLibre && !d.bloqueada
-            ? `<button class="reservar">Reservar</button>`
-            : `<b>No disponible</b>`
-      }
+      ${d.lugar === "Zoom"
+        ? `<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
+        : `<small><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">${d.direccion}</a></small><br><br>`}
+      ${esMia ? `<button class="cancelar">Cancelar</button>` : estaLibre && !d.bloqueada ? `<button>Reservar</button>` : `<b>No disponible</b>`}
     `;
 
-    /* ===== ADMIN BLOQUEAR ===== */
     if (admin) {
       div.querySelector(".toggle").onclick = async () => {
         if (unsubscribe) unsubscribe();
         await db.collection("salidas").doc(d.id).update({ bloqueada: !d.bloqueada });
         escucharSalidas(email, nombre, admin);
-      };
-    }
-
-    /* ===== CANCELAR ===== */
-    if (esMia) {
-      div.querySelector(".cancelar").onclick = async () => {
-        const diff = (new Date(d.fecha) - new Date()) / 36e5;
-        if (diff < 48) return alert("No puedes cancelar con menos de 48 horas");
-
-        await db.collection("salidas").doc(d.id).update({
-          ocupada: false,
-          email: "",
-          reservadoPor: ""
-        });
-      };
-    }
-
-    /* ===== RESERVAR ===== */
-    if (estaLibre && !d.bloqueada) {
-      div.querySelector(".reservar").onclick = async () => {
-        const snap = await db.collection("salidas")
-          .where("email","==",email)
-          .where("ocupada","==",true)
-          .get();
-
-        if (snap.size >= 4) return alert("Máximo 4 reservas");
-
-        await db.collection("salidas").doc(d.id).update({
-          ocupada: true,
-          email,
-          reservadoPor: nombre
-        });
       };
     }
 
@@ -194,13 +218,10 @@ const emailInput = document.getElementById("email");
 function cargar() {
   const nombre = nombreInput.value;
   const email = emailInput.value;
-
   if (!nombre || !email) return alert("Completa los datos");
 
   let admin = false;
-  if (ADMINS.includes(email)) {
-    admin = prompt("Clave admin:") === ADMIN_PASSWORD;
-  }
+  if (ADMINS.includes(email)) admin = prompt("Clave admin:") === ADMIN_PASSWORD;
 
   nombreInput.disabled = true;
   emailInput.disabled = true;
