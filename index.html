@@ -91,25 +91,38 @@ function renderizar(snapshot, email, nombre, admin) {
           : "slot no-disponible";
 
     div.innerHTML = `
-      ${admin ? `<button class="toggle">${d.bloqueada ? "Desbloquear" : "Bloquear"}</button><br><br>` : ""}
-      <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-      🕘 ${d.hora}<br>
-      📍 <b>${d.lugar}</b><br><br>
+  ${admin ? `<button class="toggle">${d.bloqueada ? "Desbloquear" : "Bloquear"}</button><br><br>` : ""}
 
-      ${esMia
-        ? `<button class="cancelar">Cancelar</button>`
-        : estaLibre && !d.bloqueada
-          ? `<button class="reservar">Reservar</button>`
-          : `<b>No disponible</b>`
-      }
-    `;
+  <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+  🕘 ${d.hora}<br>
+  📍 <b>${d.lugar}</b><br>
+
+  ${
+    d.lugar === "Zoom"
+      ? `<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
+      : `<small>
+           <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
+             ${d.direccion}
+           </a>
+         </small><br><br>`
+  }
+
+  ${
+    esMia
+      ? `<button class="cancelar">Cancelar</button>`
+      : estaLibre && !d.bloqueada
+        ? `<button class="reservar">Reservar</button>`
+        : `<b>No disponible</b>`
+  }
+`;
 
     /* ===== ADMIN BLOQUEAR ===== */
     if (admin) {
       div.querySelector(".toggle").onclick = async () => {
         const ref = db.collection("salidas").doc(d.id);
-        const snap = await ref.get();
-        await ref.update({ bloqueada: !snap.data().bloqueada });
+        await ref.update({
+  bloqueada: d.bloqueada ? false : true
+});
       };
     }
 
