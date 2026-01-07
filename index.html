@@ -166,7 +166,7 @@ function render(snap,email,nombre){
   .sort((a,b)=>new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora))
   .forEach(d=>{
     const esMia = d.ocupada && d.email === email;
-    const esReservaAjena = ES_ADMIN && d.ocupada && !esMia;
+    const esReservaAjena = ES_ADMIN && d.ocupada;
     if(!ES_ADMIN && (d.bloqueada || (d.ocupada && !esMia))) return;
 
     const div=document.createElement("div");
@@ -197,6 +197,15 @@ ${esMia
 }
 `;
 
+    /* ===== ADMIN: BLOQUEAR / DESBLOQUEAR ===== */
+if (ES_ADMIN) {
+  if (!d.bloqueada) {
+    div.innerHTML += `<button class="bloquear">🚫 Bloquear salida</button>`;
+  } else {
+    div.innerHTML += `<button class="desbloquear">✅ Desbloquear salida</button>`;
+  }
+}
+    
     /* ===== RESERVAR ===== */
     if(!esMia && !d.bloqueada && !esReservaAjena){
       div.querySelector(".reservar")?.addEventListener("click", async ()=>{
@@ -248,10 +257,33 @@ ${esMia
       });
     }
 
+     /* ===== ADMIN: EVENTOS BLOQUEAR / DESBLOQUEAR ===== */
+div.querySelector(".bloquear")?.addEventListener("click", async () => {
+  const ok = confirm("¿Bloquear esta salida para que nadie la pueda reservar?");
+  if (!ok) return;
+
+  await db.collection("salidas").doc(d.id).update({
+    bloqueada: true
+  });
+
+  alert("🚫 Salida bloqueada");
+});
+
+div.querySelector(".desbloquear")?.addEventListener("click", async () => {
+  const ok = confirm("¿Desbloquear esta salida para que vuelva a estar disponible?");
+  if (!ok) return;
+
+  await db.collection("salidas").doc(d.id).update({
+    bloqueada: false
+  });
+
+  alert("✅ Salida desbloqueada");
+});
+    
     lista.appendChild(div);
   });
 }
-
+ 
 /* ===== CARGAR ===== */
 function cargar(){
   if(!nombre.value || !email.value) return alert("Completa los datos");
