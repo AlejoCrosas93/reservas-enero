@@ -10,8 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+<!-- 🔥 FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <!-- 📧 EMAILJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
@@ -135,6 +137,13 @@ firebase.initializeApp({
   projectId:"reservas-enero"
 });
 const db=firebase.firestore();
+
+/* 🔐 AUTH (PASO 1.2) */
+const auth = firebase.auth();
+auth.onAuthStateChanged(user => {
+  console.log("AUTH USER:", user);
+});
+
 let unsub=null;
 
 /* ===== ESCUCHA ===== */
