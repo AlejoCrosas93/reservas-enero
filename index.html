@@ -188,18 +188,26 @@ ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reserva
 
         /* 📧 ENVÍO DE CORREO */
         emailjs.send(
-          "service_AlejoCrosas93",
-          "template_90uufqn",
-          {
-            nombre: nombre,
-            email: email,
-            fecha: `${diaSemana(d.fecha)} ${d.fecha}`,
-            hora: d.hora,
-            lugar: d.lugar==="Zoom"
-              ? "Reunión por Zoom"
-              : `${d.lugar} – ${d.direccion}`
-          }
-        );
+  "service_AlejoCrosas93",
+  "template_90uufqn",
+  {
+    nombre: nombre,
+    email: email,
+    fecha: `${diaSemana(d.fecha)} ${d.fecha}`,
+    hora: d.hora,
+    lugar: d.lugar === "Zoom"
+      ? "Reunión por Zoom"
+      : `${d.lugar} – ${d.direccion}`
+  }
+).then(
+  function(response) {
+    console.log("📧 Correo enviado con éxito", response.status, response.text);
+  },
+  function(error) {
+    console.error("❌ Error al enviar correo:", error);
+    alert("La reserva se hizo, pero hubo un problema enviando el correo.");
+  }
+);
       });
     }
 
