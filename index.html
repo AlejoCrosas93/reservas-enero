@@ -111,7 +111,7 @@ emailjs.init("1tklIP8Pmxwxrokd8");
 /* ===== CONFIG ===== */
 const ADMINS=["alegabo.98@gmail.com"];
 const ADMIN_PASSWORD="1420";
-let ES_ADMIN = false;
+let ES_ADMIN=false;
 
 /* ===== SUBTÍTULO ===== */
 (()=>{const m=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -173,41 +173,34 @@ target="_blank">📍 Ver ubicación en Maps</a></div><br>`}
 ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reservar</button>":"<b>No disponible</b>"}
 `;
 
-    if(ES_ADMIN){
-      const btn=document.createElement("button");
-      btn.textContent=d.bloqueada?"Desbloquear":"Bloquear";
-      btn.onclick=()=>db.collection("salidas").doc(d.id)
-        .update({bloqueada:!d.bloqueada});
-      div.prepend(btn);
-    }
-
     if(!esMia&&!d.bloqueada){
-      div.querySelector(".reservar")?.addEventListener("click",()=>{
-        db.collection("salidas").doc(d.id)
-        .update({ocupada:true,email,reservadoPor:nombre});
+      div.querySelector(".reservar")?.addEventListener("click", async ()=>{
+        const ok = confirm(
+          `¿Confirmas que deseas reservar esta salida?\n\n` +
+          `📅 ${diaSemana(d.fecha)} ${d.fecha}\n` +
+          `🕘 ${d.hora}\n` +
+          `📍 ${d.lugar}\n\n` +
+          `Recuerda que tienes hasta 2 días antes para cancelar.`
+        );
+        if(!ok) return;
 
-        /* 📧 ENVÍO DE CORREO */
+        await db.collection("salidas").doc(d.id)
+          .update({ocupada:true,email,reservadoPor:nombre});
+
         emailjs.send(
-  "service_AlejoCrosas93",
-  "template_90uufqn",
-  {
-    nombre: nombre,
-    email: email,
-    fecha: `${diaSemana(d.fecha)} ${d.fecha}`,
-    hora: d.hora,
-    lugar: d.lugar === "Zoom"
-      ? "Reunión por Zoom"
-      : `${d.lugar} – ${d.direccion}`
-  }
-).then(
-  function(response) {
-    console.log("📧 Correo enviado con éxito", response.status, response.text);
-  },
-  function(error) {
-    console.error("❌ Error al enviar correo:", error);
-    alert("La reserva se hizo, pero hubo un problema enviando el correo.");
-  }
-);
+          "service_AlejoCrosas93",
+          "template_90uufqn",
+          {
+            nombre,email,
+            fecha:`${diaSemana(d.fecha)} ${d.fecha}`,
+            hora:d.hora,
+            lugar:d.lugar==="Zoom"?"Reunión por Zoom":`${d.lugar} – ${d.direccion}`
+          }
+        ).then(()=>{
+          alert("✅ ¡Reserva realizada con éxito!\n\nTe hemos enviado un correo con los detalles.\n\nGracias por tu disposición. 🙏");
+        },()=>{
+          alert("La reserva se realizó, pero hubo un problema enviando el correo.");
+        });
       });
     }
 
