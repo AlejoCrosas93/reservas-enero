@@ -117,14 +117,21 @@ function renderizar(snapshot, email, nombre, admin) {
 `;
 
     /* ===== ADMIN BLOQUEAR ===== */
-    if (admin) {
-      div.querySelector(".toggle").onclick = async () => {
-        const ref = db.collection("salidas").doc(d.id);
-        await ref.update({
-  bloqueada: d.bloqueada ? false : true
-});
-      };
-    }
+  if (admin) {
+  div.querySelector(".toggle").onclick = async () => {
+    // ⛔ Pausar escucha en tiempo real
+    if (unsubscribe) unsubscribe();
+
+    const ref = db.collection("salidas").doc(d.id);
+
+    await ref.update({
+      bloqueada: !d.bloqueada
+    });
+
+    // 🔄 Reanudar escucha
+    escucharSalidas(email, nombre, admin);
+  };
+}
 
     /* ===== CANCELAR ===== */
     if (esMia) {
