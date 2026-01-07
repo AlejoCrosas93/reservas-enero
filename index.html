@@ -9,10 +9,12 @@
 
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
+
     .slot { border: 1px solid #ccc; padding: 10px; margin: 6px 0; }
     .slot.mia { background: #e6f7ff; border-color: #1890ff; }
     .slot.libre { background: #f6ffed; border-color: #52c41a; }
     .slot.no-disponible { background: #f0f0f0; border-color: #999; color: #777; }
+
     button { margin-top: 5px; }
   </style>
 </head>
@@ -21,10 +23,10 @@
 <h2>Reservas Enero</h2>
 
 <label>Nombre:</label><br>
-<input type="text" id="nombre" /><br><br>
+<input type="text" id="nombre"><br><br>
 
 <label>Email:</label><br>
-<input type="email" id="email" /><br><br>
+<input type="email" id="email"><br><br>
 
 <button onclick="cargar()">Cargar salidas</button>
 
@@ -68,7 +70,9 @@ function renderizar(snapshot, email, nombre, admin) {
   const salidas = [];
   snapshot.forEach(doc => salidas.push({ id: doc.id, ...doc.data() }));
 
-  salidas.sort((a,b)=> new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora));
+  salidas.sort((a,b) =>
+    new Date(a.fecha+"T"+a.hora) - new Date(b.fecha+"T"+b.hora)
+  );
 
   salidas.forEach(d => {
     const esMia = d.ocupada && d.email === email;
@@ -77,7 +81,14 @@ function renderizar(snapshot, email, nombre, admin) {
     if (!admin && d.ocupada && !esMia) return;
 
     const div = document.createElement("div");
-    div.className = d.bloqueada ? "slot no-disponible" : esMia ? "slot mia" : estaLibre ? "slot libre" : "slot no-disponible";
+
+    div.className = d.bloqueada
+      ? "slot no-disponible"
+      : esMia
+        ? "slot mia"
+        : estaLibre
+          ? "slot libre"
+          : "slot no-disponible";
 
     div.innerHTML = `
       ${admin ? `<button class="toggle">${d.bloqueada ? "Desbloquear" : "Bloquear"}</button><br><br>` : ""}
@@ -85,9 +96,12 @@ function renderizar(snapshot, email, nombre, admin) {
       🕘 ${d.hora}<br>
       📍 <b>${d.lugar}</b><br><br>
 
-      ${esMia ? `<button class="cancelar">Cancelar</button>` :
-        estaLibre && !d.bloqueada ? `<button class="reservar">Reservar</button>` :
-        `<b>No disponible</b>`}
+      ${esMia
+        ? `<button class="cancelar">Cancelar</button>`
+        : estaLibre && !d.bloqueada
+          ? `<button class="reservar">Reservar</button>`
+          : `<b>No disponible</b>`
+      }
     `;
 
     /* ===== ADMIN BLOQUEAR ===== */
@@ -115,11 +129,11 @@ function renderizar(snapshot, email, nombre, admin) {
 
     /* ===== RESERVAR ===== */
     if (estaLibre && !d.bloqueada) {
-      const btn = div.querySelector(".reservar");
-      if (btn) btn.onclick = async () => {
+      div.querySelector(".reservar").onclick = async () => {
         const snap = await db.collection("salidas")
           .where("email","==",email)
-          .where("ocupada","==",true).get();
+          .where("ocupada","==",true)
+          .get();
 
         if (snap.size >= 4) return alert("Máximo 4 reservas");
 
@@ -136,6 +150,9 @@ function renderizar(snapshot, email, nombre, admin) {
 }
 
 /* ================= CARGAR ================= */
+const nombreInput = document.getElementById("nombre");
+const emailInput = document.getElementById("email");
+
 function cargar() {
   const nombre = nombreInput.value;
   const email = emailInput.value;
@@ -147,44 +164,12 @@ function cargar() {
     admin = prompt("Clave admin:") === ADMIN_PASSWORD;
   }
 
-  nombreInput.disabled = emailInput.disabled = true;
+  nombreInput.disabled = true;
+  emailInput.disabled = true;
+
   escucharSalidas(email, nombre, admin);
 }
-
-const nombreInput = document.getElementById("nombre");
-const emailInput = document.getElementById("email");
 </script>
 
-<script>
-/* ================= GENERADOR ENERO 2026 ================= */
-
-async function generarSalidas2026() {
-  const fechas = [
-    { fecha: "2026-01-08", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" },
-    { fecha: "2026-01-15", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" },
-    { fecha: "2026-01-22", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" },
-    { fecha: "2026-01-29", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" }
-  ];
-
-  for (const s of fechas) {
-    const id = `${s.fecha}_${s.hora.replace(":", "")}`;
-
-    await db.collection("salidas").doc(id).set({
-      fecha: s.fecha,
-      hora: s.hora,
-      lugar: s.lugar,
-      direccion: "",
-      zoomLink: s.zoomLink,
-      ocupada: false,
-      reservadoPor: "",
-      email: "",
-      bloqueada: false
-    });
-  }
-
-  console.log("✅ Salidas Enero 2026 creadas correctamente");
-}
-</script>
-  
 </body>
 </html>
