@@ -167,7 +167,8 @@ function render(snap,email,nombre){
   .forEach(d=>{
     const esMia = d.ocupada && d.email === email;
     const esReservaAjena = ES_ADMIN && d.ocupada && !esMia;
-    if(!ES_ADMIN && (d.bloqueada || (d.ocupada && !esMia))) return;
+    if (d.bloqueada && !ES_ADMIN) return;
+if (d.ocupada && !esMia && !ES_ADMIN) return;
 
     const div=document.createElement("div");
     div.className=d.bloqueada?"slot no-disponible":esMia?"slot mia":"slot libre";
