@@ -141,15 +141,21 @@
         }
       `;
 
-      /* ===== ADMIN BLOQUEAR ===== */
-      /* ===== ADMIN BLOQUEAR ===== */
+/* ===== ADMIN BLOQUEAR (CORREGIDO DEFINITIVO) ===== */
 if (admin) {
   const btnBloq = div.querySelector(".bloquear, .desbloquear");
 
   if (btnBloq) {
     btnBloq.onclick = async () => {
-      await db.collection("salidas").doc(d.id).update({
-        bloqueada: d.bloqueada ? false : true
+      btnBloq.disabled = true;
+
+      const ref = db.collection("salidas").doc(d.id);
+      const snap = await ref.get();
+
+      const estadoActual = snap.data().bloqueada === true;
+
+      await ref.update({
+        bloqueada: !estadoActual
       });
     };
   }
