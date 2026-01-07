@@ -155,5 +155,36 @@ const nombreInput = document.getElementById("nombre");
 const emailInput = document.getElementById("email");
 </script>
 
+<script>
+/* ================= GENERADOR ENERO 2026 ================= */
+
+async function generarSalidas2026() {
+  const fechas = [
+    { fecha: "2026-01-08", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" },
+    { fecha: "2026-01-15", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" },
+    { fecha: "2026-01-22", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" },
+    { fecha: "2026-01-29", hora: "09:00", lugar: "Zoom", zoomLink: "https://zoom.us" }
+  ];
+
+  for (const s of fechas) {
+    const id = `${s.fecha}_${s.hora.replace(":", "")}`;
+
+    await db.collection("salidas").doc(id).set({
+      fecha: s.fecha,
+      hora: s.hora,
+      lugar: s.lugar,
+      direccion: "",
+      zoomLink: s.zoomLink,
+      ocupada: false,
+      reservadoPor: "",
+      email: "",
+      bloqueada: false
+    });
+  }
+
+  console.log("✅ Salidas Enero 2026 creadas correctamente");
+}
+</script>
+  
 </body>
 </html>
