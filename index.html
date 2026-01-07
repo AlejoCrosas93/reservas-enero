@@ -9,29 +9,10 @@
 
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-
-    .slot {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin: 6px 0;
-    }
-
-    .slot.mia {
-      background: #e6f7ff;
-      border-color: #1890ff;
-    }
-
-    .slot.libre {
-      background: #f6ffed;
-      border-color: #52c41a;
-    }
-
-    .slot.no-disponible {
-      background: #f0f0f0;
-      border-color: #999;
-      color: #777;
-    }
-
+    .slot { border: 1px solid #ccc; padding: 10px; margin: 6px 0; }
+    .slot.mia { background: #e6f7ff; border-color: #1890ff; }
+    .slot.libre { background: #f6ffed; border-color: #52c41a; }
+    .slot.no-disponible { background: #f0f0f0; border-color: #999; color: #777; }
     button { margin-top: 5px; }
   </style>
 </head>
@@ -50,191 +31,128 @@
 <div id="lista"></div>
 
 <script>
-  /* ================= ADMINISTRADORES ================= */
-  const ADMINS = ["alegabo.98@gmail.com"];
-  const ADMIN_PASSWORD = "1420";
+/* ================= ADMIN ================= */
+const ADMINS = ["alegabo.98@gmail.com"];
+const ADMIN_PASSWORD = "1420";
 
-  function esAdmin(email) {
-    return ADMINS.includes(email);
-  }
-
-  /* ================= FECHA ================= */
-  function diaSemana(fechaISO) {
-    const dias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-    return dias[new Date(fechaISO + "T00:00:00").getDay()];
-  }
-
-  /* ================= FIREBASE ================= */
-  const firebaseConfig = {
-    apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
-    authDomain: "reservas-enero.firebaseapp.com",
-    projectId: "reservas-enero",
-    storageBucket: "reservas-enero.firebasestorage.app",
-    messagingSenderId: "109682365508",
-    appId: "1:109682365508:web:716eee5b1538d2f769d811"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  let unsubscribe = null;
-
-  /* ================= ESCUCHAR SALIDAS ================= */
-  function escucharSalidas(email, nombre, admin) {
-    if (unsubscribe) unsubscribe();
-
-    unsubscribe = db.collection("salidas").onSnapshot(snapshot => {
-      renderizar(snapshot, email, nombre, admin);
-    });
-  }
-
-  /* ================= RENDER ================= */
-  function renderizar(snapshot, email, nombre, admin) {
-    const cont = document.getElementById("lista");
-    cont.innerHTML = "";
-
-    const salidas = [];
-    snapshot.forEach(doc => salidas.push({ id: doc.id, ...doc.data() }));
-
-    salidas.sort((a, b) =>
-      new Date(a.fecha + "T" + a.hora) - new Date(b.fecha + "T" + b.hora)
-    );
-
-    salidas.forEach(d => {
-      const esMia = d.ocupada && d.email === email;
-      const estaLibre = !d.ocupada;
-      const ocupadaPorOtro = d.ocupada && d.email !== email;
-
-      if (!admin && ocupadaPorOtro) return;
-
-      const div = document.createElement("div");
-
-      if (d.bloqueada) div.className = "slot no-disponible";
-      else if (esMia) div.className = "slot mia";
-      else if (estaLibre) div.className = "slot libre";
-      else div.className = "slot no-disponible";
-
-      div.innerHTML = `
-        ${admin ? `
-          <button class="${d.bloqueada ? "desbloquear" : "bloquear"}">
-            ${d.bloqueada ? "Desbloquear" : "Bloquear"}
-          </button><br><br>
-        ` : ""}
-
-        <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-        🕘 ${d.hora}<br>
-        📍 <b>${d.lugar}</b><br>
-
-        ${d.lugar === "Zoom"
-          ? `<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
-          : `<small>
-               <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
-                 ${d.direccion}
-               </a>
-             </small><br><br>`}
-
-        ${esMia
-          ? `<button class="cancelar">Cancelar</button>`
-          : estaLibre && !d.bloqueada
-            ? `<button class="reservar">Reservar</button>`
-            : `<b>No disponible</b>`
-        }
-      `;
-
-/* ===== ADMIN BLOQUEAR (CORREGIDO DEFINITIVO) ===== */
-if (admin) {
-  const btnBloq = div.querySelector(".bloquear, .desbloquear");
-
-  if (btnBloq) {
-    btnBloq.onclick = async () => {
-      btnBloq.disabled = true;
-
-      const ref = db.collection("salidas").doc(d.id);
-      const snap = await ref.get();
-
-      const estadoActual = snap.data().bloqueada === true;
-
-      await ref.update({
-        bloqueada: !estadoActual
-      });
-    };
-  }
+/* ================= FECHA ================= */
+function diaSemana(fechaISO) {
+  const dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  return dias[new Date(fechaISO + "T00:00:00").getDay()];
 }
 
-      /* ===== CANCELAR ===== */
-      if (esMia) {
-        div.querySelector(".cancelar").onclick = async () => {
-          const diff = (new Date(d.fecha) - new Date()) / 36e5;
-          if (diff < 48) {
-            alert("No puedes cancelar con menos de 48 horas");
-            return;
-          }
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
+  authDomain: "reservas-enero.firebaseapp.com",
+  projectId: "reservas-enero",
+});
 
-          await db.collection("salidas").doc(d.id).update({
-            ocupada: false,
-            email: "",
-            reservadoPor: ""
-          });
-        };
-      }
+const db = firebase.firestore();
+let unsubscribe = null;
 
-      /* ===== RESERVAR ===== */
-      if (estaLibre && !d.bloqueada) {
-        const btn = div.querySelector(".reservar");
-        if (btn) {
-          btn.onclick = async () => {
-            const snap = await db.collection("salidas")
-              .where("email", "==", email)
-              .where("ocupada", "==", true)
-              .get();
+/* ================= ESCUCHAR ================= */
+function escucharSalidas(email, nombre, admin) {
+  if (unsubscribe) unsubscribe();
 
-            if (snap.size >= 4) {
-              alert("Máximo 4 reservas permitidas");
-              return;
-            }
+  unsubscribe = db.collection("salidas").onSnapshot(snap => {
+    renderizar(snap, email, nombre, admin);
+  });
+}
 
-            await db.collection("salidas").doc(d.id).update({
-              ocupada: true,
-              email,
-              reservadoPor: nombre
-            });
-          };
-        }
-      }
+/* ================= RENDER ================= */
+function renderizar(snapshot, email, nombre, admin) {
+  const cont = document.getElementById("lista");
+  cont.innerHTML = "";
 
-      cont.appendChild(div);
-    });
-  }
+  const salidas = [];
+  snapshot.forEach(doc => salidas.push({ id: doc.id, ...doc.data() }));
 
-  /* ================= CARGAR ================= */
+  salidas.sort((a,b)=> new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora));
+
+  salidas.forEach(d => {
+    const esMia = d.ocupada && d.email === email;
+    const estaLibre = !d.ocupada;
+
+    if (!admin && d.ocupada && !esMia) return;
+
+    const div = document.createElement("div");
+    div.className = d.bloqueada ? "slot no-disponible" : esMia ? "slot mia" : estaLibre ? "slot libre" : "slot no-disponible";
+
+    div.innerHTML = `
+      ${admin ? `<button class="toggle">${d.bloqueada ? "Desbloquear" : "Bloquear"}</button><br><br>` : ""}
+      <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+      🕘 ${d.hora}<br>
+      📍 <b>${d.lugar}</b><br><br>
+
+      ${esMia ? `<button class="cancelar">Cancelar</button>` :
+        estaLibre && !d.bloqueada ? `<button class="reservar">Reservar</button>` :
+        `<b>No disponible</b>`}
+    `;
+
+    /* ===== ADMIN BLOQUEAR ===== */
+    if (admin) {
+      div.querySelector(".toggle").onclick = async () => {
+        const ref = db.collection("salidas").doc(d.id);
+        const snap = await ref.get();
+        await ref.update({ bloqueada: !snap.data().bloqueada });
+      };
+    }
+
+    /* ===== CANCELAR ===== */
+    if (esMia) {
+      div.querySelector(".cancelar").onclick = async () => {
+        const diff = (new Date(d.fecha) - new Date()) / 36e5;
+        if (diff < 48) return alert("No puedes cancelar con menos de 48 horas");
+
+        await db.collection("salidas").doc(d.id).update({
+          ocupada: false,
+          email: "",
+          reservadoPor: ""
+        });
+      };
+    }
+
+    /* ===== RESERVAR ===== */
+    if (estaLibre && !d.bloqueada) {
+      const btn = div.querySelector(".reservar");
+      if (btn) btn.onclick = async () => {
+        const snap = await db.collection("salidas")
+          .where("email","==",email)
+          .where("ocupada","==",true).get();
+
+        if (snap.size >= 4) return alert("Máximo 4 reservas");
+
+        await db.collection("salidas").doc(d.id).update({
+          ocupada: true,
+          email,
+          reservadoPor: nombre
+        });
+      };
+    }
+
+    cont.appendChild(div);
+  });
+}
+
+/* ================= CARGAR ================= */
 function cargar() {
-  const nombre = document.getElementById("nombre").value;
-  const email = document.getElementById("email").value;
+  const nombre = nombreInput.value;
+  const email = emailInput.value;
 
-  if (!nombre || !email) {
-    alert("Ingresa nombre y email");
-    return;
-  }
+  if (!nombre || !email) return alert("Completa los datos");
 
   let admin = false;
-
   if (ADMINS.includes(email)) {
-    const clave = prompt("Ingresa la clave de administrador:");
-
-    if (clave === ADMIN_PASSWORD) {
-      admin = true;
-      alert("Modo administrador activado");
-    } else {
-      alert("Clave incorrecta. Entraste como usuario normal.");
-    }
+    admin = prompt("Clave admin:") === ADMIN_PASSWORD;
   }
 
-  document.getElementById("nombre").disabled = true;
-  document.getElementById("email").disabled = true;
-
+  nombreInput.disabled = emailInput.disabled = true;
   escucharSalidas(email, nombre, admin);
 }
 
+const nombreInput = document.getElementById("nombre");
+const emailInput = document.getElementById("email");
 </script>
 
 </body>
