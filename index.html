@@ -187,10 +187,10 @@ ${d.lugar==="Zoom"
 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}"
 target="_blank">📍 Ver ubicación en Maps</a></div><br>`}
 
-${esMia
-  ? "<b>Reservada por ti</b>"
-  : esReservaAjena
-    ? "<button class='liberar'>🔓 Liberar (admin)</button>"
+${esReservaAjena
+  ? "<button class='liberar'>🔓 Liberar (admin)</button>"
+  : esMia
+    ? "<b>Reservada por ti</b>"
     : !d.bloqueada
       ? "<button class='reservar'>Reservar</button>"
       : "<b>No disponible</b>"
