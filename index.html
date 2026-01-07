@@ -105,6 +105,7 @@ Que Jehová recompense tu duro trabajo.<br>
 /* ===== CONFIG ===== */
 const ADMINS=["alegabo.98@gmail.com"];
 const ADMIN_PASSWORD="1420";
+let ES_ADMIN = false;
 
 /* ===== SUBTÍTULO ===== */
 (()=>{const m=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -131,19 +132,19 @@ const db=firebase.firestore();
 let unsub=null;
 
 /* ===== ESCUCHA ===== */
-function escuchar(email,nombre,admin){
+function escuchar(email,nombre){
   if(unsub)unsub();
-  unsub=db.collection("salidas").onSnapshot(s=>render(s,email,nombre,admin));
+  unsub=db.collection("salidas").onSnapshot(s=>render(s,email,nombre));
 }
 
 /* ===== RENDER ===== */
-function render(snap,email,nombre,admin){
+function render(snap,email,nombre){
   lista.innerHTML="";
   snap.docs.map(d=>({id:d.id,...d.data()}))
   .sort((a,b)=>new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora))
   .forEach(d=>{
     const esMia=d.ocupada&&d.email===email;
-    if(!admin&&(d.bloqueada||(d.ocupada&&!esMia)))return;
+    if(!ES_ADMIN&&(d.bloqueada||(d.ocupada&&!esMia)))return;
 
     const div=document.createElement("div");
     div.className=d.bloqueada?"slot no-disponible":esMia?"slot mia":"slot libre";
@@ -159,18 +160,26 @@ ${!d.bloqueada&&!d.ocupada?"🟢 Disponible":"🔴 No disponible"}
 
 ${d.lugar==="Zoom"
 ?`<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
-:`<div>
-${d.direccion}<br>
+:`<div>${d.direccion}<br>
 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}"
-target="_blank">📍 Ver ubicación en Maps</a>
-</div><br>`}
+target="_blank">📍 Ver ubicación en Maps</a></div><br>`}
 
 ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reservar</button>":"<b>No disponible</b>"}
 `;
 
+    if(ES_ADMIN){
+      const btn=document.createElement("button");
+      btn.textContent=d.bloqueada?"Desbloquear":"Bloquear";
+      btn.onclick=()=>db.collection("salidas").doc(d.id)
+        .update({bloqueada:!d.bloqueada});
+      div.prepend(btn);
+    }
+
     if(!esMia&&!d.bloqueada){
-      div.querySelector(".reservar").onclick=()=>db.collection("salidas").doc(d.id)
-      .update({ocupada:true,email,reservadoPor:nombre});
+      div.querySelector(".reservar")?.addEventListener("click",()=>{
+        db.collection("salidas").doc(d.id)
+        .update({ocupada:true,email,reservadoPor:nombre});
+      });
     }
 
     lista.appendChild(div);
@@ -180,10 +189,10 @@ ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reserva
 /* ===== CARGAR ===== */
 function cargar(){
   if(!nombre.value||!email.value)return alert("Completa los datos");
-  const admin=ADMINS.includes(email.value)&&prompt("Clave admin:")===ADMIN_PASSWORD;
+  ES_ADMIN=ADMINS.includes(email.value)&&prompt("Clave admin:")===ADMIN_PASSWORD;
   nombre.disabled=email.disabled=true;
   bienvenida.style.display="block";
-  escuchar(email.value,nombre.value,admin);
+  escuchar(email.value,nombre.value);
   setTimeout(()=>bienvenida.scrollIntoView({behavior:"smooth"}),300);
 }
 </script>
