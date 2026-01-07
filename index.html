@@ -82,7 +82,6 @@ button{
 
 <button onclick="cargar()">Cargar salidas</button>
 
-<!-- 🔵 BOTÓN AYUDA -->
 <a href="https://wa.me/573155298698?text=Hola,%20necesito%20ayuda%20con%20las%20reservas%20de%20salidas"
    target="_blank"
    style="display:block;text-align:center;
@@ -156,12 +155,15 @@ ${!d.bloqueada&&!d.ocupada?"🟢 Disponible":"🔴 No disponible"}
 
 <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
 🕘 ${d.hora}<br>
-📍 <b>${d.lugar}</b><br><br>
+📍 <b>${d.lugar}</b><br>
 
 ${d.lugar==="Zoom"
 ?`<a href="${d.zoomLink}" target="_blank">💻 Entrar a Zoom</a><br><br>`
-:`<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}" target="_blank">
-📍 Ver ubicación en Maps</a><br><br>`}
+:`<div>
+${d.direccion}<br>
+<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}"
+target="_blank">📍 Ver ubicación en Maps</a>
+</div><br>`}
 
 ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reservar</button>":"<b>No disponible</b>"}
 `;
@@ -178,12 +180,10 @@ ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reserva
 /* ===== CARGAR ===== */
 function cargar(){
   if(!nombre.value||!email.value)return alert("Completa los datos");
-
   const admin=ADMINS.includes(email.value)&&prompt("Clave admin:")===ADMIN_PASSWORD;
   nombre.disabled=email.disabled=true;
   bienvenida.style.display="block";
   escuchar(email.value,nombre.value,admin);
-
   setTimeout(()=>bienvenida.scrollIntoView({behavior:"smooth"}),300);
 }
 </script>
