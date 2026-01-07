@@ -171,24 +171,41 @@ function render(snap, email, nombre, admin) {
           : "slot libre";
 
       div.innerHTML = `
-        ${admin ? `
-          <button class="${d.bloqueada ? "desbloquear" : "bloquear"}">
-            ${d.bloqueada ? "Desbloquear" : "Bloquear"}
-          </button><br><br>
-        ` : ""}
+  ${admin ? `
+    <button class="${d.bloqueada ? "desbloquear" : "bloquear"}">
+      ${d.bloqueada ? "Desbloquear" : "Bloquear"}
+    </button><br><br>
+  ` : ""}
 
-        <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
-        🕘 ${d.hora}<br>
-        📍 ${d.lugar}<br><br>
+  <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
+  🕘 ${d.hora}<br>
+  📍 <b>${d.lugar}</b><br>
 
-        ${
-          esMia
-            ? "<b>Reservada por ti</b>"
-            : !d.bloqueada
-              ? "<button class='reservar'>Reservar</button>"
-              : "<b>No disponible</b>"
-        }
-      `;
+  ${
+    d.lugar === "Zoom"
+      ? `
+        <a href="${d.zoomLink}" target="_blank">
+          💻 Entrar a Zoom
+        </a><br><br>
+      `
+      : `
+        <small>
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.direccion)}"
+             target="_blank">
+            ${d.direccion}
+          </a>
+        </small><br><br>
+      `
+  }
+
+  ${
+    esMia
+      ? "<b>Reservada por ti</b>"
+      : !d.bloqueada
+        ? "<button class='reservar'>Reservar</button>"
+        : "<b>No disponible</b>"
+  }
+`;
 
       /* ===== ADMIN BLOQUEAR ===== */
       if (admin) {
