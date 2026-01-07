@@ -146,9 +146,18 @@ auth.onAuthStateChanged(user => {
 
 function loginAdminSilencioso(email) {
   if (!ADMINS.includes(email)) return;
+
   auth.signInWithEmailAndPassword(email, ADMIN_PASSWORD)
-    .then(() => console.log("Admin autenticado correctamente"))
-    .catch(err => console.error("Error login admin:", err.message));
+    .then(() => {
+      console.log("Admin autenticado correctamente");
+
+      // 🔁 FORZAR RE-RENDER COMO ADMIN
+      if (unsub) unsub();
+      escuchar(email.value, nombre.value);
+    })
+    .catch(err => {
+      console.error("Error login admin:", err.message);
+    });
 }
 
 let unsub=null;
