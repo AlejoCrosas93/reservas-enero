@@ -13,6 +13,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- 📧 EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <style>
 :root {
   --bg:#fafafa; --text:#222; --card:#fff;
@@ -102,6 +105,9 @@ Que Jehová recompense tu duro trabajo.<br>
 <div id="lista"></div>
 
 <script>
+/* ===== EMAILJS INIT ===== */
+emailjs.init("1tklIP8Pmxwxrokd8");
+
 /* ===== CONFIG ===== */
 const ADMINS=["alegabo.98@gmail.com"];
 const ADMIN_PASSWORD="1420";
@@ -179,6 +185,21 @@ ${esMia?"<b>Reservada por ti</b>":!d.bloqueada?"<button class='reservar'>Reserva
       div.querySelector(".reservar")?.addEventListener("click",()=>{
         db.collection("salidas").doc(d.id)
         .update({ocupada:true,email,reservadoPor:nombre});
+
+        /* 📧 ENVÍO DE CORREO */
+        emailjs.send(
+          "service_AlejoCrosas93",
+          "template_90uufqn",
+          {
+            nombre: nombre,
+            email: email,
+            fecha: `${diaSemana(d.fecha)} ${d.fecha}`,
+            hora: d.hora,
+            lugar: d.lugar==="Zoom"
+              ? "Reunión por Zoom"
+              : `${d.lugar} – ${d.direccion}`
+          }
+        );
       });
     }
 
