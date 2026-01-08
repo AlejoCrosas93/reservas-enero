@@ -104,6 +104,10 @@ button{
 <input id="email" placeholder="Tu correo electrónico">
 
 <button onclick="cargar()">Cargar salidas</button>
+<!-- 👑 SOLO ADMIN -->
+<button id="btnExcel" style="display:none" onclick="descargarExcel()">
+📥 Descargar reservas (Excel)
+</button>
 
 <a href="https://wa.me/573155298698?text=Hola,%20necesito%20ayuda%20con%20las%20reservas%20de%20salidas"
    target="_blank"
@@ -339,12 +343,58 @@ function cargar(){
     && prompt("Clave admin:") === ADMIN_PASSWORD;
 
   if (ES_ADMIN) loginAdminSilencioso(email.value);
+  if (ES_ADMIN) document.getElementById("btnExcel").style.display = "block";
 
   nombre.disabled = email.disabled = true;
   bienvenida.style.display = "block";
   escuchar(email.value, nombre.value);
   setTimeout(() => bienvenida.scrollIntoView({ behavior: "smooth" }), 300);
 }
+
+  /* ===== ADMIN: DESCARGAR EXCEL ===== */
+async function descargarExcel() {
+  const snap = await db.collection("reservas")
+    .orderBy("fechaRegistro", "asc")
+    .get();
+
+  if (snap.empty) {
+    alert("No hay reservas registradas.");
+    return;
+  }
+
+  // Encabezados CSV
+  let csv = "Fecha,Hora,Lugar,Nombre,Email,Acción,Fecha registro\n";
+
+  snap.forEach(doc => {
+    const d = doc.data();
+
+    const fecha = d.fecha || "";
+    const hora = d.hora || "";
+    const lugar = (d.lugar || "").replace(/,/g, " ");
+    const nombre = (d.reservadoPor || "").replace(/,/g, " ");
+    const email = d.email || "";
+    const accion = d.accion || "";
+
+    let fechaRegistro = "";
+    if (d.fechaRegistro?.toDate) {
+      fechaRegistro = d.fechaRegistro.toDate().toLocaleString();
+    }
+
+    csv += `"${fecha}","${hora}","${lugar}","${nombre}","${email}","${accion}","${fechaRegistro}"\n`;
+  });
+
+  // Descargar archivo
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "reservas_salidas.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
 </script>
 </body>
 </html>
