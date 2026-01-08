@@ -189,7 +189,10 @@ function render(snap,email,nombre){
 
     const div=document.createElement("div");
     if (d.esFestivo) div.classList.add("festivo");
-    div.className=d.bloqueada?"slot no-disponible":esMia?"slot mia":"slot libre";
+    div.className =
+  "slot " +
+  (d.bloqueada ? "no-disponible" : esMia ? "mia" : "libre") +
+  (d.esFestivo ? " festivo" : "");
 
     div.innerHTML=`
 ${d.esFestivo ? "<div class='badge-festivo'>🎉 Día festivo</div>" : ""}
