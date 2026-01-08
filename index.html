@@ -220,6 +220,18 @@ if (ES_ADMIN) {
 
         await db.collection("salidas").doc(d.id)
           .update({ocupada:true,email,reservadoPor:nombre});
+        // 📊 REGISTRO EN HISTORIAL DE RESERVAS
+await db.collection("reservas").add({
+  salidaId: d.id,
+  fecha: d.fecha,
+  hora: d.hora,
+  lugar: d.lugar,
+  direccion: d.direccion || "",
+  reservadoPor: nombre,
+  email: email,
+  accion: "reservada",
+  fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+});
 
         emailjs.send(
           "service_AlejoCrosas93",
@@ -236,7 +248,7 @@ if (ES_ADMIN) {
       });
     }
 
-    /* ===== 🔓 LIBERAR (PASO 3.2) ===== */
+    /* ===== 🔓 LIBERAR ===== */
     if (esReservaAjena) {
       div.querySelector(".liberar")?.addEventListener("click", async () => {
         const ok = confirm(
@@ -252,6 +264,17 @@ if (ES_ADMIN) {
           email: firebase.firestore.FieldValue.delete(),
           reservadoPor: firebase.firestore.FieldValue.delete()
         });
+        // 📊 REGISTRO DE LIBERACIÓN POR ADMIN
+await db.collection("reservas").add({
+  salidaId: d.id,
+  fecha: d.fecha,
+  hora: d.hora,
+  lugar: d.lugar,
+  reservadoPor: d.reservadoPor || "",
+  email: d.email || "",
+  accion: "liberada por admin",
+  fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+});
 
         alert("✅ Salida liberada correctamente");
       });
