@@ -72,6 +72,24 @@ button{
 }
 
 .modo{position:fixed;top:15px;right:15px;cursor:pointer}
+
+/* ===== FESTIVO ===== */
+.slot.festivo {
+  border-left: 6px solid #9c27b0; /* morado */
+  background: linear-gradient(135deg, #faf5ff, #ffffff);
+}
+
+.badge-festivo {
+  display: inline-block;
+  background: #9c27b0;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+  
 </style>
 </head>
 
@@ -170,9 +188,12 @@ function render(snap,email,nombre){
     if(!ES_ADMIN && (d.bloqueada || (d.ocupada && !esMia))) return;
 
     const div=document.createElement("div");
+    if (d.esFestivo) div.classList.add("festivo");
     div.className=d.bloqueada?"slot no-disponible":esMia?"slot mia":"slot libre";
 
     div.innerHTML=`
+${d.esFestivo ? "<div class='badge-festivo'>🎉 Día festivo</div>" : ""}
+
 <span class="estado ${!d.bloqueada&&!d.ocupada?"disponible":"nodisponible"}">
 ${!d.bloqueada&&!d.ocupada?"🟢 Disponible":"🔴 No disponible"}
 </span><br>
