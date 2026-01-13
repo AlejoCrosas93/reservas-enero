@@ -243,79 +243,104 @@ if (ES_ADMIN) {
   }
 }
     
-    /* ===== RESERVAR ===== */
-    if(!esMia && !d.bloqueada && !esReservaAjena){
-      div.querySelector(".reservar")?.addEventListener("click", async ()=>{
-        const ok = confirm(
-          `¿Confirmas que deseas reservar esta salida?\n\n` +
-          `📅 ${diaSemana(d.fecha)} ${d.fecha}\n` +
-          `🕘 ${d.hora}\n` +
-          `📍 ${d.lugar}\n\n` +
-          `Recuerda que tienes hasta 2 días antes para cancelar.`
-        );
-        if(!ok) return;
+  /* ===== RESERVAR ===== */
+if (!esMia && !d.bloqueada && !esReservaAjena) {
+  div.querySelector(".reservar")?.addEventListener("click", async () => {
+    const ok = confirm(
+      `¿Confirmas que deseas reservar esta salida?\n\n` +
+      `📅 ${diaSemana(d.fecha)} ${d.fecha}\n` +
+      `🕘 ${d.hora}\n` +
+      `📍 ${d.lugar}\n\n` +
+      `Recuerda que tienes hasta 2 días antes para cancelar.`
+    );
+    if (!ok) return;
 
-        await db.collection("salidas").doc(d.id)
-          .update({ocupada:true,email,reservadoPor:nombre});
-        // 📊 REGISTRO EN HISTORIAL DE RESERVAS
-await db.collection("reservas").add({
-  salidaId: d.id,
-  fecha: d.fecha,
-  hora: d.hora,
-  lugar: d.lugar,
-  direccion: d.direccion || "",
-  reservadoPor: nombre,
-  email: email,
-  accion: "reservada",
-  fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
-});
-
-        emailjs.send(
-          "service_AlejoCrosas93",
-          "template_90uufqn",
-          {
-            nombre,email,
-            fecha:`${diaSemana(d.fecha)} ${d.fecha}`,
-            hora:d.hora,
-            lugar:d.lugar==="Zoom"?"Reunión por Zoom":`${d.lugar} – ${d.direccion}`
-          }
-        ).then(()=>{
-          alert("✅ ¡Reserva realizada con éxito!");
-        });
+    try {
+      // 1️⃣ Actualizar salida
+      await db.collection("salidas").doc(d.id).update({
+        ocupada: true,
+        email,
+        reservadoPor: nombre
       });
+
+      // 2️⃣ Registrar historial
+      await db.collection("reservas").add({
+        salidaId: d.id,
+        fecha: d.fecha,
+        hora: d.hora,
+        lugar: d.lugar,
+        direccion: d.direccion || "",
+        reservadoPor: nombre,
+        email: email,
+        accion: "reservada",
+        fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+    } catch (err) {
+      console.error("Error al reservar:", err);
+      alert("❌ No se pudo guardar la reserva. Revisa tu conexión e inténtalo de nuevo.");
+      return; // ⛔ detener todo
     }
 
-    /* ===== 🔓 LIBERAR ===== */
-    if (esReservaAjena) {
-      div.querySelector(".liberar")?.addEventListener("click", async () => {
-        const ok = confirm(
-          `¿Deseas LIBERAR esta salida?\n\n` +
-          `📅 ${diaSemana(d.fecha)} ${d.fecha}\n` +
-          `🕘 ${d.hora}\n\n` +
-          `Esta acción es solo para pruebas o errores.`
-        );
-        if (!ok) return;
+    // 3️⃣ Email SOLO si todo salió bien
+    emailjs.send(
+      "service_AlejoCrosas93",
+      "template_90uufqn",
+      {
+        nombre,
+        email,
+        fecha: `${diaSemana(d.fecha)} ${d.fecha}`,
+        hora: d.hora,
+        lugar: d.lugar === "Zoom"
+          ? "Reunión por Zoom"
+          : `${d.lugar} – ${d.direccion}`
+      }
+    ).then(() => {
+      alert("✅ ¡Reserva realizada con éxito!");
+    });
+  });
+}
 
-        await db.collection("salidas").doc(d.id).update({
-          ocupada: false,
-          email: firebase.firestore.FieldValue.delete(),
-          reservadoPor: firebase.firestore.FieldValue.delete()
-        });
-        // 📊 REGISTRO DE LIBERACIÓN POR ADMIN
-await db.collection("reservas").add({
-  salidaId: d.id,
-  fecha: d.fecha,
-  hora: d.hora,
-  lugar: d.lugar,
-  reservadoPor: d.reservadoPor || "",
-  email: d.email || "",
-  accion: "liberada por admin",
-  fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
-});
+   /* ===== 🔓 LIBERAR ===== */
+if (esReservaAjena) {
+  div.querySelector(".liberar")?.addEventListener("click", async () => {
+    const ok = confirm(
+      `¿Deseas LIBERAR esta salida?\n\n` +
+      `📅 ${diaSemana(d.fecha)} ${d.fecha}\n` +
+      `🕘 ${d.hora}\n\n` +
+      `Esta acción es solo para pruebas o errores.`
+    );
+    if (!ok) return;
 
-        alert("✅ Salida liberada correctamente");
+    try {
+      // 1️⃣ Liberar salida
+      await db.collection("salidas").doc(d.id).update({
+        ocupada: false,
+        email: firebase.firestore.FieldValue.delete(),
+        reservadoPor: firebase.firestore.FieldValue.delete()
       });
+
+      // 2️⃣ Registrar historial
+      await db.collection("reservas").add({
+        salidaId: d.id,
+        fecha: d.fecha,
+        hora: d.hora,
+        lugar: d.lugar,
+        reservadoPor: d.reservadoPor || "",
+        email: d.email || "",
+        accion: "liberada por admin",
+        fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+    } catch (err) {
+      console.error("Error al liberar:", err);
+      alert("❌ No se pudo liberar la salida. Inténtalo nuevamente.");
+      return;
     }
+
+    alert("✅ Salida liberada correctamente");
+  });
+}
 
      /* ===== ADMIN: EVENTOS BLOQUEAR / DESBLOQUEAR ===== */
 div.querySelector(".bloquear")?.addEventListener("click", async () => {
