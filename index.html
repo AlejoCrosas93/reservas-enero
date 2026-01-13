@@ -225,7 +225,9 @@ ${d.lugar==="Zoom"
 target="_blank">📍 Ver ubicación en Maps</a></div><br>`}
 
 ${esReservaAjena
-  ? "<button class='liberar'>🔓 Liberar (admin)</button>"
+  ? `<b>👤 Reservada por:</b><br>
+     ${d.reservadoPor || "Sin nombre"}<br><br>
+     <button class='liberar'>🔓 Liberar (admin)</button>`
   : esMia
     ? "<b>Reservada por ti</b>"
     : !d.bloqueada
