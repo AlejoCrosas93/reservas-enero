@@ -166,6 +166,15 @@ auth.onAuthStateChanged(user => {
   console.log("AUTH USER:", user);
 });
 
+// 🔐 LOGIN ANÓNIMO PARA USUARIOS (OBLIGATORIO)
+auth.signInAnonymously()
+  .then(() => {
+    console.log("Usuario anónimo autenticado");
+  })
+  .catch(err => {
+    console.error("Error auth anónimo:", err);
+  });
+
 function loginAdminSilencioso(email) {
   if (!ADMINS.includes(email)) return;
   auth.signInWithEmailAndPassword(email, ADMIN_PASSWORD)
