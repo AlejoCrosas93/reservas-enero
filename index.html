@@ -90,6 +90,13 @@ button{
   margin-bottom: 6px;
 }
 
+/* ===== SALIDA VENCIDA ===== */
+.slot.vencida {
+  opacity: 0.55;
+  filter: grayscale(60%);
+  background: #f3f3f3;
+}
+  
 /* ===== SALIDA RESERVADA ===== */
 .slot.reservada {
   border-left: 6px solid #ff9800; /* naranja */
@@ -157,6 +164,14 @@ if(localStorage.modo==="dark")document.body.classList.add("dark");
 /* ===== FECHA ===== */
 const dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const diaSemana=f=>dias[new Date(f+"T00:00:00").getDay()];
+  function esSalidaVencida(fecha) {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0); // quitar hora
+
+  const fSalida = new Date(fecha + "T00:00:00");
+
+  return fSalida < hoy;
+}
 
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
@@ -202,13 +217,14 @@ function render(snap,email,nombre){
   snap.docs.map(d=>({id:d.id,...d.data()}))
   .sort((a,b)=>new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora))
   .forEach(d=>{
+    const vencida = esSalidaVencida(d.fecha) && !d.ocupada;
     const esMia = d.ocupada && d.email === email;
     const esReservaAjena = ES_ADMIN && d.ocupada;
     if(!ES_ADMIN && (d.bloqueada || (d.ocupada && !esMia))) return;
 
-    const div=document.createElement("div");
-    if (d.esFestivo) div.classList.add("festivo");
-    div.className =
+    const div = document.createElement("div");
+
+div.className =
   "slot " +
   (d.bloqueada
     ? "no-disponible"
@@ -218,24 +234,29 @@ function render(snap,email,nombre){
         ? "mia"
         : "libre"
   ) +
-  (d.esFestivo ? " festivo" : "");
+  (d.esFestivo ? " festivo" : "") +
+  (vencida ? " vencida" : "");
 
     div.innerHTML=`
 ${d.esFestivo ? "<div class='badge-festivo'>🎉 Día festivo</div>" : ""}
 
 <span class="estado ${
-  d.ocupada
+  vencida
     ? "nodisponible"
-    : !d.bloqueada
-      ? "disponible"
-      : "nodisponible"
+    : d.ocupada
+      ? "nodisponible"
+      : !d.bloqueada
+        ? "disponible"
+        : "nodisponible"
 }">
-${d.ocupada
-  ? "🟠 Reservada"
-  : !d.bloqueada
-    ? "🟢 Disponible"
-    : "🔴 No disponible"}
-</span><br>
+${vencida
+  ? "⏰ Salida vencida"
+  : d.ocupada
+    ? "🟠 Reservada"
+    : !d.bloqueada
+      ? "🟢 Disponible"
+      : "🔴 No disponible"}
+</span>
 
 <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
 🕘 ${d.hora}<br>
@@ -269,7 +290,7 @@ if (ES_ADMIN) {
 }
     
   /* ===== RESERVAR ===== */
-if (!esMia && !d.bloqueada && !esReservaAjena) {
+if (!esMia && !d.bloqueada && !vencida && !esReservaAjena) {
   div.querySelector(".reservar")?.addEventListener("click", async () => {
     const ok = confirm(
       `¿Confirmas que deseas reservar esta salida?\n\n` +
