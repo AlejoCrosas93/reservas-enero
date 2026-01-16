@@ -223,8 +223,18 @@ function render(snap,email,nombre){
     div.innerHTML=`
 ${d.esFestivo ? "<div class='badge-festivo'>🎉 Día festivo</div>" : ""}
 
-<span class="estado ${!d.bloqueada&&!d.ocupada?"disponible":"nodisponible"}">
-${!d.bloqueada&&!d.ocupada?"🟢 Disponible":"🔴 No disponible"}
+<span class="estado ${
+  d.ocupada
+    ? "nodisponible"
+    : !d.bloqueada
+      ? "disponible"
+      : "nodisponible"
+}">
+${d.ocupada
+  ? "🟠 Reservada"
+  : !d.bloqueada
+    ? "🟢 Disponible"
+    : "🔴 No disponible"}
 </span><br>
 
 <b>${diaSemana(d.fecha)} ${d.fecha}</b><br>
