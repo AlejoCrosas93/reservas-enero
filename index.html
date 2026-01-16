@@ -181,6 +181,144 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
+/* ===== GENERADOR AUTOMÁTICO DE SALIDAS MENSUALES ===== */
+
+const MES = 1;   // Febrero = 1  (Enero=0)
+const ANIO = 2026;
+
+// 📍 DIRECCIONES Y LUGARES (los mismos que usas actualmente)
+const LUGARES = {
+  martes: {
+    hora: "09:00",
+    lugar: "Territorio Principal",
+    direccion: "Colina Campestre"
+  },
+  miercoles1: {
+    hora: "09:00",
+    lugar: "Territorio Norte",
+    direccion: "Colina Campestre"
+  },
+  miercoles2: {
+    hora: "16:00",
+    lugar: "Territorio Sur",
+    direccion: "Colina Campestre"
+  },
+  jueves1: {
+    hora: "09:00",
+    lugar: "Territorio Principal",
+    direccion: "Colina Campestre"
+  },
+  jueves2: {
+    hora: "18:00",
+    lugar: "Zoom",
+    direccion: "",
+    zoomLink: "https://zoom.us"
+  },
+  viernes: {
+    hora: "09:00",
+    lugar: "Territorio Principal",
+    direccion: "Colina Campestre"
+  },
+  finSemana: {
+    hora: "09:30",
+    lugar: "Territorio Principal",
+    direccion: "Colina Campestre"
+  }
+};
+
+// ⚠️ FESTIVOS MANUALES (si hay lunes festivos)
+const FESTIVOS = [
+  "2026-02-16" // ejemplo: lunes festivo
+];
+
+// ===============================
+
+async function generarSalidasMesAutomatico() {
+
+  console.log("📅 Generando salidas mes:", MES + 1, ANIO);
+
+  const diasMes = new Date(ANIO, MES + 1, 0).getDate();
+
+  for (let dia = 1; dia <= diasMes; dia++) {
+
+    const fechaObj = new Date(ANIO, MES, dia);
+    const fechaISO = fechaObj.toISOString().split("T")[0];
+
+    const diaSemana = fechaObj.getDay(); 
+    // 0 dom — 1 lun — 2 mar — 3 mie — 4 jue — 5 vie — 6 sab
+
+    const esFestivo = FESTIVOS.includes(fechaISO);
+
+    let salidasHoy = [];
+
+    // ===== REGLAS =====
+
+    // Lunes → solo si festivo
+    if (diaSemana === 1 && esFestivo) {
+      salidasHoy.push(LUGARES.finSemana);
+    }
+
+    // Martes
+    if (diaSemana === 2) {
+      salidasHoy.push(LUGARES.martes);
+    }
+
+    // Miércoles (2 salidas)
+    if (diaSemana === 3) {
+      salidasHoy.push(LUGARES.miercoles1);
+      salidasHoy.push(LUGARES.miercoles2);
+    }
+
+    // Jueves (territorio + zoom)
+    if (diaSemana === 4) {
+      salidasHoy.push(LUGARES.jueves1);
+      salidasHoy.push(LUGARES.jueves2);
+    }
+
+    // Viernes
+    if (diaSemana === 5) {
+      salidasHoy.push(LUGARES.viernes);
+    }
+
+    // Sábado y Domingo
+    if (diaSemana === 6 || diaSemana === 0) {
+      salidasHoy.push(LUGARES.finSemana);
+    }
+
+    // =============================
+
+    for (const salida of salidasHoy) {
+
+      // ❌ Evitar duplicados
+      const existe = await db.collection("salidas")
+        .where("fecha", "==", fechaISO)
+        .where("hora", "==", salida.hora)
+        .get();
+
+      if (!existe.empty) {
+        console.log("⏭ Ya existe:", fechaISO, salida.hora);
+        continue;
+      }
+
+      // ✅ Crear salida
+      await db.collection("salidas").add({
+        fecha: fechaISO,
+        hora: salida.hora,
+        lugar: salida.lugar,
+        direccion: salida.direccion || "",
+        zoomLink: salida.zoomLink || "",
+        bloqueada: false,
+        ocupada: false,
+        esFestivo: esFestivo
+      });
+
+      console.log("✅ Creada:", fechaISO, salida.hora, salida.lugar);
+    }
+  }
+
+  console.log("🎉 Generación mensual completada");
+}
+
 /* 🔐 AUTH */
 const auth = firebase.auth();
 auth.onAuthStateChanged(user => {
