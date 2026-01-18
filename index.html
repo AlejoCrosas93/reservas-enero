@@ -374,9 +374,11 @@ function escuchar(email,nombre){
 function render(snap,email,nombre){
   lista.innerHTML="";
   const datos = snap.docs
-  .map(d=>({id:d.id,...d.data()}));
-  .sort((a,b)=>new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora))
-  .forEach(d=>{
+  .map(d => ({ id: d.id, ...d.data() }))
+  .sort((a,b)=> new Date(a.fecha+"T"+a.hora) - new Date(b.fecha+"T"+b.hora));
+
+  datos.forEach(d=>{
+    
     const hayEspecial = hayEspecialEseDia(datos, d.fecha);
   // Si hay especial y esta salida NO es especial → ocultar
   if (hayEspecial && !d.especial) return;
