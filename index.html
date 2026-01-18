@@ -446,10 +446,13 @@ ${esReservaAjena
      <button class='liberar'>🔓 Liberar (admin)</button>`
   : esMia
     ? "<b>Reservada por ti</b>"
-    : !d.bloqueada
-      ? "<button class='reservar'>Reservar</button>"
-      : "<b>No disponible</b>"
+    : d.especial
+      ? "<b>⭐ Salida especial — No reservable</b>"
+      : !d.bloqueada
+        ? "<button class='reservar'>Reservar</button>"
+        : "<b>No disponible</b>"
 }
+
 `;
 
     /* ===== ADMIN: BLOQUEAR / DESBLOQUEAR ===== */
