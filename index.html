@@ -102,6 +102,23 @@ button{
   border-left: 6px solid #ff9800; /* naranja */
   background: linear-gradient(135deg, #fff3e0, #ffffff);
 }
+
+/* ===== SALIDA ESPECIAL SUPERINTENDENTE ===== */
+.slot.especial {
+  border-left: 6px solid #2196f3;
+  background: linear-gradient(135deg, #e3f2fd, #ffffff);
+}
+
+.badge-especial {
+  display:inline-block;
+  background:#2196f3;
+  color:white;
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:0.75em;
+  font-weight:600;
+  margin-bottom:6px;
+}
   
 </style>
 </head>
@@ -373,10 +390,12 @@ div.className =
         : "libre"
   ) +
   (d.esFestivo ? " festivo" : "") +
+  (d.especial ? " especial" : "") +
   (vencida ? " vencida" : "");
 
     div.innerHTML=`
 ${d.esFestivo ? "<div class='badge-festivo'>🎉 Día festivo</div>" : ""}
+${d.especial ? "<div class='badge-especial'>⭐ Semana especial — Visita SC</div>" : ""}
 
 <span class="estado ${
   vencida
