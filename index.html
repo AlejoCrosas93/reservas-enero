@@ -613,6 +613,74 @@ async function descargarExcel() {
   URL.revokeObjectURL(url);
 }
 
+async function generarMesDesdePlantilla(anio, mesDestino) {
+
+  // 1️⃣ Leer salidas existentes (plantilla: enero)
+  const snap = await db.collection("salidas").get();
+
+  if (snap.empty) {
+    alert("No hay salidas base para clonar");
+    return;
+  }
+
+  const plantilla = [];
+
+  snap.forEach(doc => {
+    const d = doc.data();
+
+    // Solo usar salidas válidas
+    if (!d.fecha || !d.hora) return;
+
+    plantilla.push(d);
+  });
+
+  // 2️⃣ Generar fechas del mes destino
+  const diasMes = new Date(anio, mesDestino + 1, 0).getDate();
+
+  let creadas = 0;
+
+  for (let dia = 1; dia <= diasMes; dia++) {
+
+    const fechaNueva = new Date(anio, mesDestino, dia);
+    const diaSemana = fechaNueva.getDay();
+
+    const fechaStr = fechaNueva.toISOString().slice(0,10);
+
+    // buscar coincidencias de día semana + hora
+    plantilla.forEach(async base => {
+
+      const baseDay = new Date(base.fecha + "T00:00:00").getDay();
+
+      if (baseDay !== diaSemana) return;
+
+      // 3️⃣ evitar duplicados
+      const existe = await db.collection("salidas")
+        .where("fecha","==",fechaStr)
+        .where("hora","==",base.hora)
+        .get();
+
+      if (!existe.empty) return;
+
+      // 4️⃣ crear nueva salida clonada
+      await db.collection("salidas").add({
+        fecha: fechaStr,
+        hora: base.hora,
+        lugar: base.lugar,
+        direccion: base.direccion || "",
+        zoomLink: base.zoomLink || "",
+        ocupada: false,
+        bloqueada: false,
+        esFestivo: false
+      });
+
+      creadas++;
+    });
+
+  }
+
+  alert("✅ Salidas generadas correctamente");
+}
+  
 </script>
 </body>
 </html>
