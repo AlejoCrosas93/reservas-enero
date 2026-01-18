@@ -373,7 +373,8 @@ function escuchar(email,nombre){
 /* ===== RENDER ===== */
 function render(snap,email,nombre){
   lista.innerHTML="";
-  const datos = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const datos = snap.docs
+  .map(d=>({id:d.id,...d.data()}));
   .sort((a,b)=>new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora))
   .forEach(d=>{
     const hayEspecial = hayEspecialEseDia(datos, d.fecha);
