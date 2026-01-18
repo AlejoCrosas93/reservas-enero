@@ -190,6 +190,10 @@ const diaSemana=f=>dias[new Date(f+"T00:00:00").getDay()];
   return fSalida < hoy;
 }
 
+function hayEspecialEseDia(lista, fecha) {
+  return lista.some(s => s.fecha === fecha && s.especial === true);
+}
+
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey:"AIzaSyATPtS-ZstYA1llON7Dc73y0stjGc0o1Ng",
@@ -369,9 +373,12 @@ function escuchar(email,nombre){
 /* ===== RENDER ===== */
 function render(snap,email,nombre){
   lista.innerHTML="";
-  snap.docs.map(d=>({id:d.id,...d.data()}))
+  const datos = snap.docs.map(d=>({id:d.id,...d.data()}));
   .sort((a,b)=>new Date(a.fecha+"T"+a.hora)-new Date(b.fecha+"T"+b.hora))
   .forEach(d=>{
+    const hayEspecial = hayEspecialEseDia(datos, d.fecha);
+  // Si hay especial y esta salida NO es especial → ocultar
+  if (hayEspecial && !d.especial) return;
     const vencida = esSalidaVencida(d.fecha) && !d.ocupada;
     const esMia = d.ocupada && d.email === email;
     const esReservaAjena = ES_ADMIN && d.ocupada;
